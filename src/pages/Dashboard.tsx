@@ -4,14 +4,12 @@ import { api } from "@/convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import {
-  adviceToMarkdown,
   answerText,
   cushionLabel,
   isAnswered,
   modelName,
   modelSearchUrl,
   QUESTIONS,
-  recommend,
   STEPS,
   supportLabel,
   WEAR_NOTE,
@@ -20,6 +18,7 @@ import {
   type QuestionId,
   type ShoeModel,
 } from "@/lib/shoe-advisor";
+import { adviceToMarkdown, recommend } from "@/lib/advice";
 import { useMutation, useQuery } from "convex/react";
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Copy, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -530,9 +529,47 @@ function Results({
         </section>
       )}
 
-      {/* À valider */}
+      {/* Comment essayer */}
       <section className="border-t border-border pt-10">
-        <p className="micro">À valider avant achat</p>
+        <p className="micro">Comment essayer</p>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+          L&apos;ordre compte : c&apos;est l&apos;essai qui valide la pointure, pas la fiche produit.
+        </p>
+        <ol className="mt-6">
+          {advice.tryOn.map((item, index) => (
+            <li key={item} className="flex gap-5 border-t border-border py-4 text-sm leading-6">
+              <span className="w-6 shrink-0 text-xs tabular-nums text-muted-foreground">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span className="text-muted-foreground">{item}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* Points professionnels */}
+      <section className="border-t border-border pt-10">
+        <p className="micro">Points à faire valider par un professionnel</p>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+          Ces éléments sortent du champ d&apos;un conseil en chaussures : ils relèvent d&apos;un médecin,
+          d&apos;un podologue ou d&apos;un orthopédiste.
+        </p>
+        <ul className="mt-6">
+          {advice.professional.map((item) => (
+            <li
+              key={item}
+              className="flex gap-4 border-t border-border py-4 text-sm leading-6 text-muted-foreground"
+            >
+              <span className="w-6 shrink-0 text-xs text-muted-foreground">⚠</span>
+              {item}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* Données à vérifier */}
+      <section className="border-t border-border pt-10">
+        <p className="micro">Données à vérifier (non garanties)</p>
         <ul className="mt-6 space-y-3">
           {advice.pending.map((item) => (
             <li key={item} className="flex gap-3 text-sm leading-6 text-muted-foreground">

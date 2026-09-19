@@ -7,7 +7,7 @@ import promptMarkdown from "../../PROMPT.md?raw";
 const SECTIONS = [
   { title: "Rôle et objectif", detail: "Conseiller spécialisé marche, randonnée légère et sneakers ; produire une liste courte et justifiée." },
   { title: "Règles absolues", detail: "Questions d'abord, aucune marque inventée, aucun chiffre deviné, contraintes dures respectées." },
-  { title: "Questions à poser", detail: "Cinq blocs, dix questions, envoyées en un seul message avant toute proposition." },
+  { title: "Questions à poser", detail: "Cinq blocs, treize questions, posées avant toute proposition." },
   { title: "Méthode d'analyse", detail: "Usage et terrain éliminatoires, puis support, amorti, chaussant, contraintes, style." },
   { title: "Format de réponse", detail: "Ce que j'ai compris, modèles retenus, modèles écartés, à vérifier." },
   { title: "Garde-fous", detail: "Anti-hallucination, reprise si réponses partielles, rappel professionnel de santé." },
@@ -98,7 +98,7 @@ export default function Prompt() {
 
             <p className="mt-10 text-xs leading-6 text-muted-foreground">
               L&apos;espace d&apos;analyse de ce site applique exactement les mêmes règles, avec un
-              classement déterministe sur dix critères et les exclusions affichées.
+              classement déterministe sur treize critères et les exclusions affichées.
             </p>
           </div>
 

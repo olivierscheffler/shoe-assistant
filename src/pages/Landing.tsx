@@ -20,9 +20,12 @@ const CRITERIA = [
   { title: "Appui et pronation", detail: "Neutre, pronation, supination, douleurs — ou « je ne sais pas »." },
   { title: "Forme du pied", detail: "Largeur, volume, hallux, ampoules, semelles orthopédiques." },
   { title: "Poids corporel", detail: "Une tranche suffit : elle change le besoin d'amorti." },
+  { title: "Avant-pied", detail: "Orteils comprimés à l'essai ou jamais serré : cela décide de la largeur." },
   { title: "Budget", detail: "Un plafond dur : au-delà de 15 %, le modèle est écarté." },
   { title: "Contraintes", detail: "Vegan, fabrication européenne, réparable, poids, discrétion." },
   { title: "Style", detail: "Discret, sportif, streetwear, outdoor — ou indifférent." },
+  { title: "Lieu d'essai", detail: "Magasin ou ligne avec retour : la stratégie de pointure change." },
+  { title: "Priorité déclarée", detail: "Confort, durabilité, légèreté, maintien, esthétique : arbitrage à score égal." },
 ];
 
 const FAMILIES = [
@@ -226,7 +229,7 @@ export default function Landing() {
             {
               number: "01",
               title: "On pose les questions",
-              body: "Cinq étapes, dix questions. Les réponses « je ne sais pas » sont acceptées : elles deviennent des points à vérifier, pas des suppositions.",
+              body: "Cinq étapes, treize questions. Les réponses « je ne sais pas » sont acceptées : elles deviennent des points à vérifier, pas des suppositions.",
             },
             {
               number: "02",
@@ -268,7 +271,7 @@ export default function Landing() {
                 Ce que l&apos;analyse regarde.
               </h2>
               <p className="mt-6 text-[15px] leading-7 text-muted-foreground">
-                Aucun critère caché, aucune pondération secrète : les dix questions ci-contre
+                Aucun critère caché, aucune pondération secrète : les treize questions ci-contre
                 déterminent tout le classement.
               </p>
             </div>

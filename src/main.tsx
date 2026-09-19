@@ -127,7 +127,10 @@ createRoot(document.getElementById("root")!).render(
               <Route
                 path="/dashboard"
                 element={
-                  <RequireAuth>
+                  <RequireAuth
+                    title="Connectez-vous pour analyser votre profil"
+                    description="Le questionnaire, le classement justifié et vos analyses enregistrées vivent ici."
+                  >
                     <Dashboard />
                   </RequireAuth>
                 }

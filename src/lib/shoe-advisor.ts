@@ -35,12 +35,15 @@ export type QuestionId =
   | "terrain"
   | "volume"
   | "meteo"
+  | "essayage"
   | "appui"
   | "pied"
+  | "serrage"
   | "poids"
   | "budget"
   | "exigences"
-  | "style";
+  | "style"
+  | "priorite";
 
 /** Une réponse est toujours une valeur d'option, ou la liste des valeurs cochées. */
 export type Answers = Partial<Record<QuestionId, string | string[]>>;
@@ -112,6 +115,14 @@ export interface Advice {
   excluded: MatchResult[];
   summary: { label: string; value: string }[];
   pending: string[];
+  /**
+   * Déroulé d'essai conseillé, adapté au lieu d'achat déclaré, et points qui
+   * relèvent d'un professionnel de santé. Complétés par `src/lib/advice.ts`,
+   * qui assemble la réponse finale : le noyau de scoring de ce fichier ne les
+   * produit pas.
+   */
+  tryOn?: string[];
+  professional?: string[];
 }
 
 /* -------------------------------------------------------------------------- */
@@ -163,6 +174,16 @@ export const QUESTIONS: Record<QuestionId, Question> = {
       { value: "froid-neige", label: "Froid, boue ou neige" },
     ],
   },
+  essayage: {
+    id: "essayage",
+    label: "Où essayez-vous vos chaussures",
+    help: "Cela change la façon de sécuriser la pointure : essayage direct ou commande avec retour.",
+    options: [
+      { value: "magasin", label: "En magasin spécialisé", hint: "Essayage direct, conseil sur place" },
+      { value: "en-ligne", label: "En ligne, avec retour possible", hint: "Prix souvent plus bas, pointure à sécuriser" },
+      { value: "les-deux", label: "Les deux" },
+    ],
+  },
   appui: {
     id: "appui",
     label: "Appui et pronation",
@@ -187,6 +208,17 @@ export const QUESTIONS: Record<QuestionId, Question> = {
       { value: "hallux", label: "Hallux valgus" },
       { value: "ampoules", label: "Ampoules fréquentes" },
       { value: "orthopedie", label: "Semelles orthopédiques" },
+    ],
+  },
+  serrage: {
+    id: "serrage",
+    label: "L'avant du pied à l'essai",
+    help: "Un avant-pied comprimé est la première cause d'ampoules et d'ongles douloureux.",
+    options: [
+      { value: "jamais", label: "Jamais serré", hint: "Le pied est à l'aise à l'avant" },
+      { value: "parfois", label: "Parfois, selon les modèles" },
+      { value: "souvent", label: "Souvent comprimé", hint: "Orteils tassés, ongles sensibles" },
+      { value: "inconnu", label: "Je ne sais pas" },
     ],
   },
   poids: {
@@ -235,6 +267,18 @@ export const QUESTIONS: Record<QuestionId, Question> = {
       { value: "indifferent", label: "Peu importe" },
     ],
   },
+  priorite: {
+    id: "priorite",
+    label: "Attente prioritaire",
+    help: "Sert d'arbitrage quand deux modèles obtiennent un score proche, pas de bonus caché.",
+    options: [
+      { value: "confort", label: "Confort immédiat" },
+      { value: "durabilite", label: "Durabilité" },
+      { value: "legerete", label: "Légèreté" },
+      { value: "maintien", label: "Maintien du pied" },
+      { value: "esthetique", label: "Esthétique" },
+    ],
+  },
 };
 
 export const STEPS: Step[] = [
@@ -250,14 +294,14 @@ export const STEPS: Step[] = [
     title: "Votre rythme",
     intro:
       "Plus les kilomètres s'accumulent, plus l'amorti et la durabilité comptent davantage que le poids.",
-    questions: ["volume", "meteo"],
+    questions: ["volume", "meteo", "essayage"],
   },
   {
     id: "pied",
     title: "Votre pied",
     intro:
       "C'est ici que se joue la différence entre une paire confortable et une paire qui blesse. Aucune réponse n'est obligatoire.",
-    questions: ["appui", "pied", "poids"],
+    questions: ["appui", "pied", "serrage", "poids"],
   },
   {
     id: "contraintes",
@@ -269,8 +313,9 @@ export const STEPS: Step[] = [
   {
     id: "style",
     title: "Vos préférences",
-    intro: "Dernier point : l'apparence, pour éviter de vous proposer une paire que vous ne porterez pas.",
-    questions: ["style"],
+    intro:
+      "Dernier point : l'apparence et votre priorité déclarée, pour éviter de vous proposer une paire que vous ne porterez pas.",
+    questions: ["style", "priorite"],
   },
 ];
 
@@ -279,12 +324,15 @@ export const QUESTION_ORDER: QuestionId[] = [
   "terrain",
   "volume",
   "meteo",
+  "essayage",
   "appui",
   "pied",
+  "serrage",
   "poids",
   "budget",
   "exigences",
   "style",
+  "priorite",
 ];
 
 export function optionLabel(id: QuestionId, value: string): string {
@@ -1553,12 +1601,15 @@ interface Criteria {
   terrain?: string;
   volume?: string;
   meteo: string[];
+  essayage?: string;
   appui?: string;
   pied: string[];
+  serrage?: string;
   poids?: string;
   budget: number | undefined;
   exigences: string[];
   style?: string;
+  priorite?: string;
 }
 
 function readCriteria(answers: Answers): Criteria {
@@ -1568,17 +1619,20 @@ function readCriteria(answers: Answers): Criteria {
     terrain: single(answerValues(answers, "terrain")),
     volume: single(answerValues(answers, "volume")),
     meteo: answerValues(answers, "meteo"),
+    essayage: single(answerValues(answers, "essayage")),
     appui: single(answerValues(answers, "appui")),
     pied: answerValues(answers, "pied"),
+    serrage: single(answerValues(answers, "serrage")),
     poids: single(answerValues(answers, "poids")),
     budget: budgetKey === undefined ? undefined : BUDGET_MAX[budgetKey],
     exigences: answerValues(answers, "exigences"),
     style: single(answerValues(answers, "style")),
+    priorite: single(answerValues(answers, "priorite")),
   };
 }
 
 function scoreUsage(model: ShoeModel, c: Criteria, s: Scorer) {
-  const max = 28;
+  const max = 27;
   if (c.usage === undefined) {
     s.points += max / 2;
     return;
@@ -1597,7 +1651,7 @@ function scoreUsage(model: ShoeModel, c: Criteria, s: Scorer) {
 }
 
 function scoreTerrain(model: ShoeModel, c: Criteria, s: Scorer) {
-  const max = 16;
+  const max = 15;
   if (c.terrain === undefined) {
     s.points += max / 2;
     return;
