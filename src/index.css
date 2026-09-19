@@ -43,39 +43,47 @@
 }
 
 /* CHANGE VALUES FOR THEME */
+
+/* Minimalisme : une seule famille sans-serif pour l'interface, une serif fine
+   pour les titres, palette quasi monochrome et rayons volontairement serrés. */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, "Times New Roman", serif;
+}
+
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --radius: 0.25rem;
+  --background: oklch(0.994 0.002 106);
+  --foreground: oklch(0.185 0.004 265);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.185 0.004 265);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.185 0.004 265);
+  --primary: oklch(0.185 0.004 265);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.968 0.002 106);
+  --secondary-foreground: oklch(0.185 0.004 265);
+  --muted: oklch(0.968 0.002 106);
+  --muted-foreground: oklch(0.52 0.005 265);
+  --accent: oklch(0.964 0.003 106);
+  --accent-foreground: oklch(0.185 0.004 265);
+  --destructive: oklch(0.55 0.185 27.325);
+  --border: oklch(0.898 0.003 106);
+  --input: oklch(0.898 0.003 106);
+  --ring: oklch(0.7 0.005 265);
+  --chart-1: oklch(0.28 0.004 265);
+  --chart-2: oklch(0.42 0.004 265);
+  --chart-3: oklch(0.56 0.004 265);
+  --chart-4: oklch(0.68 0.004 265);
+  --chart-5: oklch(0.8 0.004 265);
+  --sidebar: oklch(0.985 0.002 106);
+  --sidebar-foreground: oklch(0.185 0.004 265);
+  --sidebar-primary: oklch(0.185 0.004 265);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.964 0.003 106);
+  --sidebar-accent-foreground: oklch(0.185 0.004 265);
+  --sidebar-border: oklch(0.898 0.003 106);
+  --sidebar-ring: oklch(0.7 0.005 265);
 }
 
 .dark {
@@ -118,6 +126,20 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-synthesis-weight: none;
+  }
+  /* Libellés micro : capitales espacées, comme repère d'alignement. */
+  .micro {
+    font-size: 0.6875rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .rule {
+    border-top: 1px solid var(--border);
   }
   button:not([disabled]),
   [role="button"]:not([disabled]) {

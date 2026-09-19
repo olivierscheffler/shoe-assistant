@@ -32,12 +32,16 @@ const schema = defineSchema(
       role: v.optional(roleValidator), // role of the user. do not remove
     }).index("email", ["email"]), // index for the email. do not remove or modify
 
-    // add other tables here
-
-    // tableName: defineTable({
-    //   ...
-    //   // table fields
-    // }).index("by_field", ["field"])
+    // Une analyse = un jeu de réponses au questionnaire, horodaté.
+    advisories: defineTable({
+      userId: v.id("users"),
+      /** Réponses brutes indexées par identifiant de question. */
+      answers: v.record(
+        v.string(),
+        v.union(v.string(), v.number(), v.array(v.string())),
+      ),
+      createdAt: v.number(),
+    }).index("by_user", ["userId", "createdAt"]),
   },
   {
     schemaValidation: false,

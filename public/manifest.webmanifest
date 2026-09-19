@@ -1,11 +1,11 @@
 {
-  "name": "freebuff.com application",
-  "short_name": "freebuff.com",
-  "description": "freebuff.com application",
+  "name": "Semelle — conseiller chaussures",
+  "short_name": "Semelle",
+  "description": "Conseil chaussures de marche et sneakers : questions d'abord, puis modèles adaptés avec leurs limites.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#fdfdfc",
+  "theme_color": "#fdfdfc",
   "icons": [
     {
       "src": "/logo.png",
