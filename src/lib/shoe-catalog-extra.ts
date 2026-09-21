@@ -77,20 +77,11 @@ export function availabilityNote(model: ShoeModel): string {
 }
 
 /**
- * Prix de secours pour les lignes dont la déclaration en place n'est pas encore possible :
- * `salomon-xt-6` est la dernière ligne du catalogue, hors de la zone que l'outillage peut
- * encore modifier. Tant que la ligne n'a pas été reprise, ce tableau est la source affichée.
- */
-const PRICE_CAD_PENDING: Record<string, [number, number]> = {
-  "salomon-xt-6": [240, 295],
-};
-
-/**
  * Prix affiché d'un modèle, en dollars canadiens et avant taxes. `null` = prix non documenté :
  * l'interface doit alors écrire « prix à vérifier » plutôt qu'un montant inventé.
  */
 export function priceCadOf(model: ShoeModel): [number, number] | null {
-  return model.priceCad ?? PRICE_CAD_PENDING[model.id] ?? null;
+  return model.priceCad ?? null;
 }
 
 /** Douleur déclarée : dans la version 1.1 c'était une option d'appui, on accepte encore cette forme. */
@@ -129,7 +120,6 @@ const EXTRA: ShoeModel[] = [
     vegan: "non",
     madeInEurope: "partiel",
     repairable: true,
-    priceEur: [250, 290],
     style: ["outdoor"],
     highlights: [
       "Cuir nubuck épais et semelle à crampons profonds : taillée pour la randonnée avec sac",
@@ -162,7 +152,6 @@ const EXTRA: ShoeModel[] = [
     vegan: "non",
     madeInEurope: "oui",
     repairable: true,
-    priceEur: [260, 300],
     style: ["outdoor"],
     highlights: [
       "Cuir cousu et fabriquée en Allemagne : la paire qui se ressemelle au lieu de se remplacer",
@@ -195,7 +184,6 @@ const EXTRA: ShoeModel[] = [
     vegan: "non",
     madeInEurope: "oui",
     repairable: true,
-    priceEur: [200, 260],
     style: ["outdoor", "discret"],
     highlights: [
       "Fabriquée en Angleterre, ressemelable, et réputée pour ses chaussants très larges",
@@ -228,7 +216,6 @@ const EXTRA: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "a-verifier",
     repairable: "a-verifier",
-    priceEur: [140, 180],
     style: ["outdoor", "discret"],
     highlights: [
       "Marque italienne historique : cuir, semelle adhérente, look montagne sobre",
@@ -261,7 +248,6 @@ const EXTRA: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [60, 90],
     style: ["outdoor", "sport"],
     highlights: [
       "Le meilleur rapport prix / usage en randonnée légère, et trouvable partout en France",
@@ -295,7 +281,6 @@ const EXTRA: ShoeModel[] = [
     vegan: "options",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [70, 100],
     style: ["sport", "street"],
     highlights: [
       "Confort immédiat, très léger, et vendu dans à peu près toutes les galeries marchandes",
@@ -328,7 +313,6 @@ const EXTRA: ShoeModel[] = [
     vegan: "options",
     madeInEurope: "partiel",
     repairable: false,
-    priceEur: [150, 200],
     style: ["discret", "sport"],
     highlights: [
       "Cuir de tannerie maison et chaussant anatomique, sobre et durable",
@@ -362,7 +346,6 @@ const EXTRA: ShoeModel[] = [
     vegan: "options",
     madeInEurope: "a-verifier",
     repairable: true,
-    priceEur: [140, 170],
     style: ["sport", "discret"],
     highlights: [
       "Semelle plate (0 mm de drop) et avant-pied large : le pied travaille au lieu d'être porté",
@@ -395,7 +378,6 @@ const EXTRA: ShoeModel[] = [
     vegan: "oui",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [110, 140],
     style: ["sport"],
     highlights: [
       "Semelle plate, sans matière animale, avec une garantie de semelle longue durée annoncée par la marque",
@@ -429,7 +411,6 @@ const EXTRA: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "a-verifier",
     repairable: "a-verifier",
-    priceEur: [150, 180],
     style: ["outdoor", "sport"],
     highlights: [
       "Marque récente et volontairement peu distribuée, pensée pour durer plutôt que pour la mode",
@@ -462,7 +443,6 @@ const EXTRA: ShoeModel[] = [
     vegan: "options",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [150, 190],
     style: ["outdoor", "sport"],
     highlights: [
       "Crampons agressifs et modèles proposés en chaussant large : bon compromis sentier / pied fort",
@@ -496,7 +476,6 @@ const EXTRA: ShoeModel[] = [
     vegan: "options",
     madeInEurope: "partiel",
     repairable: false,
-    priceEur: [150, 180],
     style: ["outdoor", "discret"],
     highlights: [
       "Look outdoor sobre qui passe en ville comme sur un chemin, tige résistante",
@@ -529,7 +508,6 @@ const EXTRA: ShoeModel[] = [
     vegan: "non",
     madeInEurope: "oui",
     repairable: true,
-    priceEur: [350, 420],
     style: ["discret"],
     highlights: [
       "Cuir et montage cousu en France, ressemelage en atelier : la paire qui dure des années",
@@ -562,7 +540,6 @@ const EXTRA: ShoeModel[] = [
     vegan: "oui",
     madeInEurope: "oui",
     repairable: false,
-    priceEur: [70, 95],
     style: ["discret", "street"],
     highlights: [
       "Toile et caoutchouc, sans matière animale, fabriquée en Slovaquie",
@@ -595,7 +572,6 @@ const EXTRA: ShoeModel[] = [
     vegan: "options",
     madeInEurope: "a-verifier",
     repairable: false,
-    priceEur: [130, 160],
     style: ["street", "discret"],
     highlights: [
       "Sneaker finlandaise au vrai amorti, bien plus rare en France que les modèles habituels",

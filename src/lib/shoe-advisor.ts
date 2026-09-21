@@ -15,7 +15,7 @@
  * - **notes de réserve** : tout ce qui n'est pas vérifiable est écrit noir sur blanc.
  *
  * Ce fichier est du TypeScript pur (aucun import React / DOM) : il sert au front comme
- * aux fonctions Convex.
+ * au navigateur uniquement.
  */
 
 import {

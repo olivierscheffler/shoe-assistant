@@ -1,18 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { api } from "@/convex/_generated/api";
-import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import {
-  answerText,
   availabilityNote,
   AVAILABILITY_SHORT,
   brandSite,
   cushionLabel,
+  CURRENCY,
   DIVERSITY_NOTE,
   isAnswered,
   modelName,
   modelSearchUrl,
+  priceCadOf,
   QUESTIONS,
   STEPS,
   supportLabel,
@@ -24,10 +23,9 @@ import {
   type ShoeModel,
 } from "@/lib/shoe-advisor";
 import { adviceToMarkdown, recommend } from "@/lib/advice";
-import { useMutation, useQuery } from "convex/react";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Copy, RotateCcw, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Copy, RotateCcw } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Link } from "react-router";
 import { toast } from "sonner";
 
 /** Questions minimales pour produire un classement défendable. */
@@ -40,17 +38,8 @@ const VERDICT_LABEL: Record<MatchResult["verdict"], string> = {
   ecarte: "Écarté",
 };
 
-function formatDate(value: number): string {
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
-}
-
 function specChips(model: ShoeModel): string[] {
+  const price = priceCadOf(model);
   const waterproof =
     model.waterproof === "membrane"
       ? `étanche (${model.membrane ?? "membrane"})`
@@ -66,7 +55,7 @@ function specChips(model: ShoeModel): string[] {
     model.weightG === null ? "poids à vérifier" : `poids ≈ ${model.weightG} g`,
     waterproof,
     model.wideFit ? "largeurs larges" : "largeur standard",
-    `${model.priceEur[0]}–${model.priceEur[1]} €`,
+    price ? `${price[0]}–${price[1]} ${CURRENCY}` : "prix à vérifier",
     AVAILABILITY_SHORT[model.availability],
   ];
 }
@@ -81,14 +70,12 @@ function Wizard({
   stepIndex,
   setStepIndex,
   onSubmit,
-  saving,
 }: {
   draft: Answers;
   setDraft: (next: Answers) => void;
   stepIndex: number;
   setStepIndex: (next: number) => void;
   onSubmit: () => void;
-  saving: boolean;
 }) {
   const step = STEPS[stepIndex];
   const isLast = stepIndex === STEPS.length - 1;
@@ -138,7 +125,7 @@ function Wizard({
                   type="button"
                   onClick={() => setStepIndex(index)}
                   className={cn(
-                    "flex w-full items-baseline gap-5 py-4 text-left transition-colors",
+                    "flex w-full cursor-pointer items-baseline gap-5 py-4 text-left transition-colors",
                     active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -211,7 +198,7 @@ function Wizard({
                         aria-pressed={question.multiple ? isSelected : undefined}
                         onClick={() => toggle(question, option.value)}
                         className={cn(
-                          "flex items-start gap-3 border px-4 py-3.5 text-left transition-colors",
+                          "flex cursor-pointer items-start gap-3 border px-4 py-3.5 text-left transition-colors",
                           isSelected
                             ? "border-foreground bg-foreground text-background"
                             : "border-border bg-background hover:border-foreground/30 hover:bg-accent/60",
@@ -269,10 +256,10 @@ function Wizard({
             <div className="flex flex-col items-end gap-2">
               <Button
                 className="gap-2 rounded-none px-5"
-                disabled={saving || allMissing.length > 0}
+                disabled={allMissing.length > 0}
                 onClick={onSubmit}
               >
-                {saving ? "Enregistrement…" : "Voir les résultats"}
+                Voir les résultats
                 <ArrowRight className="size-4" />
               </Button>
               {allMissing.length > 0 && (
@@ -400,14 +387,10 @@ function ResultCard({ result, rank }: { result: MatchResult; rank: number }) {
 
 function Results({
   answers,
-  createdAt,
   onRestart,
-  onDelete,
 }: {
   answers: Answers;
-  createdAt?: number;
   onRestart: () => void;
-  onDelete?: () => void;
 }) {
   const advice = useMemo(() => recommend(answers), [answers]);
 
@@ -443,7 +426,6 @@ function Results({
               : `${advice.matches.length} modèle${advice.matches.length > 1 ? "s" : ""} retenu${advice.matches.length > 1 ? "s" : ""} pour votre profil.`}
           </h1>
           <p className="mt-5 max-w-xl text-sm leading-6 text-muted-foreground">
-            {createdAt ? `Analyse enregistrée le ${formatDate(createdAt)}. ` : ""}
             Classement recalculé à partir de vos réponses : chaque point correspond à un critère
             explicite, jamais à une préférence de marque.
           </p>
@@ -458,12 +440,6 @@ function Results({
               <RotateCcw className="size-3.5" />
               Refaire le questionnaire
             </Button>
-            {onDelete && (
-              <Button variant="ghost" className="gap-2 rounded-none" onClick={onDelete}>
-                <Trash2 className="size-3.5" />
-                Supprimer
-              </Button>
-            )}
           </div>
           <p className="text-xs leading-6 text-muted-foreground lg:text-right">
             Les scores sont des indices de correspondance, pas des notes de qualité absolue.
@@ -580,7 +556,7 @@ function Results({
           L&apos;ordre compte : c&apos;est l&apos;essai qui valide la pointure, pas la fiche produit.
         </p>
         <ol className="mt-6">
-          {advice.tryOn.map((item, index) => (
+          {(advice.tryOn ?? []).map((item, index) => (
             <li key={item} className="flex gap-5 border-t border-border py-4 text-sm leading-6">
               <span className="w-6 shrink-0 text-xs tabular-nums text-muted-foreground">
                 {String(index + 1).padStart(2, "0")}
@@ -599,7 +575,7 @@ function Results({
           d&apos;un podologue ou d&apos;un orthopédiste.
         </p>
         <ul className="mt-6">
-          {advice.professional.map((item) => (
+          {(advice.professional ?? []).map((item) => (
             <li
               key={item}
               className="flex gap-4 border-t border-border py-4 text-sm leading-6 text-muted-foreground"
@@ -633,75 +609,20 @@ function Results({
 /* Page                                                                       */
 /* -------------------------------------------------------------------------- */
 
-export default function Dashboard() {
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-  const latest = useQuery(api.advisor.latestAnalysis);
-  const history = useQuery(api.advisor.analysisHistory);
-  const saveAnalysis = useMutation(api.advisor.saveAnalysis);
-  const removeAnalysis = useMutation(api.advisor.removeAnalysis);
-
+export default function Analyse() {
   const [answers, setAnswers] = useState<Answers | null>(null);
   const [draft, setDraft] = useState<Answers>({});
   const [stepIndex, setStepIndex] = useState(0);
-  const [saving, setSaving] = useState(false);
-  const [restored, setRestored] = useState(false);
 
-  // Reprend la dernière analyse enregistrée une seule fois, à l'ouverture.
-  useEffect(() => {
-    if (restored || latest === undefined) return;
-    if (latest) {
-      const stored = latest.answers as Answers;
-      setAnswers(stored);
-      setDraft(stored);
-    }
-    setRestored(true);
-  }, [latest, restored]);
-
-  const handleSubmit = async () => {
-    setSaving(true);
-    try {
-      await saveAnalysis({ answers: draft as Record<string, string | string[]> });
-      setAnswers(draft);
-      toast.success("Analyse enregistrée");
-    } catch (error) {
-      console.error(error);
-      toast.error("Enregistrement impossible : voici le résultat calculé localement.");
-      setAnswers(draft);
-    } finally {
-      setSaving(false);
-    }
+  const handleSubmit = () => {
+    setAnswers(draft);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleRestart = () => {
     setDraft(answers ?? {});
     setStepIndex(0);
     setAnswers(null);
-  };
-
-  const handleDelete = async () => {
-    if (!latest) return;
-    try {
-      await removeAnalysis({ id: latest._id });
-      setAnswers(null);
-      setDraft({});
-      setStepIndex(0);
-      toast.success("Analyse supprimée");
-    } catch (error) {
-      console.error(error);
-      toast.error("Suppression impossible");
-    }
-  };
-
-  const openHistory = (stored: Record<string, string | string[]>) => {
-    setAnswers(stored as Answers);
-    setDraft(stored as Answers);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
   };
 
   return (
@@ -713,70 +634,25 @@ export default function Dashboard() {
             <span className="hidden text-xs text-muted-foreground sm:inline">espace d&apos;analyse</span>
           </Link>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
-            <Link to="/prompt" className="hidden transition-colors hover:text-foreground sm:inline">
+            <span className="hidden sm:inline">Aucune donnée enregistrée</span>
+            <Link to="/prompt" className="transition-colors hover:text-foreground">
               Prompt .md
             </Link>
-            <span className="hidden sm:inline">{user?.email}</span>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="transition-colors hover:text-foreground"
-            >
-              Se déconnecter
-            </button>
           </div>
         </div>
       </header>
 
       <main className="mx-auto w-full max-w-6xl px-6 py-16 sm:px-8 sm:py-20">
-        {latest === undefined ? (
-          <div className="py-24 text-center text-sm text-muted-foreground">Chargement…</div>
-        ) : answers === null ? (
+        {answers === null ? (
           <Wizard
             draft={draft}
             setDraft={setDraft}
             stepIndex={stepIndex}
             setStepIndex={setStepIndex}
             onSubmit={handleSubmit}
-            saving={saving}
           />
         ) : (
-          <Results
-            answers={answers}
-            createdAt={latest?.createdAt}
-            onRestart={handleRestart}
-            onDelete={latest ? handleDelete : undefined}
-          />
-        )}
-
-        {/* Historique */}
-        {history && history.length > 0 && (
-          <section className="mt-24 border-t border-border pt-10">
-            <p className="micro">Analyses précédentes</p>
-            <ul className="mt-6">
-              {history.map((entry) => (
-                <li
-                  key={entry._id}
-                  className="flex flex-wrap items-baseline justify-between gap-4 border-t border-border py-4"
-                >
-                  <div>
-                    <p className="text-sm">{formatDate(entry.createdAt)}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {answerText(entry.answers as Answers, "usage")} ·{" "}
-                      {answerText(entry.answers as Answers, "terrain")}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => openHistory(entry.answers as Record<string, string | string[]>)}
-                    className="text-xs tracking-[0.02em] text-foreground underline-offset-4 hover:underline"
-                  >
-                    Ouvrir cette analyse
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <Results answers={answers} onRestart={handleRestart} />
         )}
       </main>
     </div>

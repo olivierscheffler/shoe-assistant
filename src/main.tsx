@@ -1,8 +1,5 @@
 import { Toaster } from "@/components/ui/sonner";
-import { RequireAuth } from "@/components/RequireAuth";
 import { VlyToolbar } from "../vly-toolbar-readonly.tsx";
-import { ConvexAuthProvider } from "@convex-dev/auth/react";
-import { ConvexReactClient } from "convex/react";
 import React, { StrictMode, useEffect, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router";
@@ -10,8 +7,7 @@ import "./index.css";
 
 // Lazy load route components for better code splitting
 const Landing = lazy(() => import("./pages/Landing.tsx"));
-const AuthPage = lazy(() => import("./pages/Auth.tsx"));
-const Dashboard = lazy(() => import("./pages/Dashboard.tsx"));
+const Analyse = lazy(() => import("./pages/Analyse.tsx"));
 const Prompt = lazy(() => import("./pages/Prompt.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
@@ -80,10 +76,6 @@ class RootErrorBoundary extends React.Component<
   }
 }
 
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
-
-
-
 function RouteSyncer() {
   const location = useLocation();
   useEffect(() => {
@@ -107,44 +99,29 @@ function RouteSyncer() {
   return null;
 }
 
-
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <RootErrorBoundary>
       <ToolbarErrorBoundary>
         <VlyToolbar />
       </ToolbarErrorBoundary>
-      <ConvexAuthProvider client={convex}>
-        {/* `basename` suit le chemin de base du build (Vite `base`) : le site
-            fonctionne aussi bien à la racine qu'en sous-chemin, comme sur
-            GitHub Pages (https://utilisateur.github.io/depot/). */}
-        <BrowserRouter basename={import.meta.env.BASE_URL}>
-          <RouteSyncer />
-          <Suspense fallback={<RouteLoading />}>
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route
-                path="/auth"
-                element={<AuthPage redirectAfterAuth="/dashboard" />}
-              />
-              <Route
-                path="/dashboard"
-                element={
-                  <RequireAuth
-                    title="Connectez-vous pour analyser votre profil"
-                    description="Le questionnaire, le classement justifié et vos analyses enregistrées vivent ici."
-                  >
-                    <Dashboard />
-                  </RequireAuth>
-                }
-              />
-              <Route path="/prompt" element={<Prompt />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-        <Toaster />
-      </ConvexAuthProvider>
+      {/* Aucun backend : le questionnaire et le classement vivent entièrement
+          dans le navigateur, et les réponses ne sont pas conservées. */}
+      {/* `basename` suit le chemin de base du build (Vite `base`) : le site
+          fonctionne aussi bien à la racine qu'en sous-chemin, comme sur
+          GitHub Pages (https://utilisateur.github.io/depot/). */}
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
+        <RouteSyncer />
+        <Suspense fallback={<RouteLoading />}>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/analyse" element={<Analyse />} />
+            <Route path="/prompt" element={<Prompt />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+      <Toaster />
     </RootErrorBoundary>
   </StrictMode>,
 );

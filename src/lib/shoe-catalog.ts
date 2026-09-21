@@ -20,7 +20,7 @@
  *   confirmer chez le distributeur (aucune conversion implicite depuis une autre devise).
  *
  * Ce fichier est du TypeScript pur (aucun import React / DOM) : il est utilisé à la fois
- * par le front et par les fonctions Convex.
+ * par le front, sans backend.
  */
 
 /* -------------------------------------------------------------------------- */
@@ -405,24 +405,12 @@ export const QUESTION_ORDER: QuestionId[] = [
 ];
 
 /**
- * Libellés des réponses d'analyses plus anciennes : les bandes de budget étaient en euros et
- * « douleurs » était une option d'appui. On les réaffiche proprement dans l'historique au lieu
- * de laisser apparaître un code brut.
+ * Libellé affichable d'une réponse. Les valeurs inconnues (brouillon d'une version
+ * antérieure) sont rendues telles quelles plutôt que traduites de travers.
  */
-const LEGACY_OPTION_LABELS: Partial<Record<QuestionId, Record<string, string>>> = {
-  budget: {
-    "moins-80": "Moins de 120 $ CA (ancienne bande : moins de 80 €)",
-    "80-130": "120 à 200 $ CA (ancienne bande : 80 à 130 €)",
-    "130-180": "200 à 280 $ CA (ancienne bande : 130 à 180 €)",
-    "180-plus": "Au-delà de 280 $ CA (ancienne bande : 180 € et plus)",
-  },
-  appui: { douleurs: "Douleurs récurrentes" },
-};
-
 export function optionLabel(id: QuestionId, value: string): string {
   const option = QUESTIONS[id].options.find((o) => o.value === value);
-  if (option) return option.label;
-  return LEGACY_OPTION_LABELS[id]?.[value] ?? value;
+  return option?.label ?? value;
 }
 
 export function answerValues(answers: Answers, id: QuestionId): string[] {
@@ -1657,7 +1645,6 @@ export const CATALOG: ShoeModel[] = [
     madeInEurope: "non",
     repairable: false,
     wideFit: false,
-    priceEur: [100, 130],
     style: ["discret", "street"],
     highlights: ["Sneaker basse intemporelle, très facile à associer", "Certaines éditions utilisent des matières recyclées et une version sans cuir existe"],
     caveats: [
@@ -1687,7 +1674,6 @@ export const CATALOG: ShoeModel[] = [
     madeInEurope: "partiel",
     repairable: false,
     wideFit: true,
-    priceEur: [90, 120],
     style: ["discret", "street", "sport"],
     highlights: [
       "Sneaker classique, disponible en tailles larges",
@@ -1716,7 +1702,7 @@ export const CATALOG: ShoeModel[] = [
     madeInEurope: "non",
     repairable: false,
     wideFit: false,
-    priceEur: [160, 200],
+    priceCad: [240, 295],
     style: ["street", "outdoor"],
     highlights: ["Look trail urbain, semelle accrocheuse et tige solide", "Passage ville / chemin sans souci"],
     caveats: ["Amorti ferme pour la marche longue", "Maintien limité pour la randonnée avec sac"],
@@ -2065,17 +2051,22 @@ function scoreBudget(model: ShoeModel, c: Criteria, s: Scorer) {
     s.points += max;
     return;
   }
-  const [min, maxPriceText] = model.priceEur;
+  if (model.priceCad === undefined) {
+    s.points += max;
+    caution(s, "Prix canadien non documenté ici : à confirmer chez le distributeur");
+    return;
+  }
+  const [min, maxPriceText] = model.priceCad;
   if (min <= c.budget) {
-    add(s, max, `Dans votre budget (${min}–${maxPriceText} € environ)`);
+    add(s, max, `Dans votre budget (${min}–${maxPriceText} $ CA environ)`);
     return;
   }
   if (min <= c.budget * 1.15) {
     s.points += 4;
-    caution(s, `Légèrement au-dessus de votre budget : à partir de ${min} € environ`);
+    caution(s, `Légèrement au-dessus de votre budget : à partir de ${min} $ CA environ`);
     return;
   }
-  block(s, `Hors budget : ${min} € minimum, soit plus de 15 % au-dessus de votre plafond`);
+  block(s, `Hors budget : ${min} $ CA minimum, soit plus de 15 % au-dessus de votre plafond`);
 }
 
 function scoreFit(model: ShoeModel, c: Criteria, s: Scorer) {
@@ -2244,7 +2235,9 @@ export function resultToMarkdown(result: MatchResult): string {
     "",
     `- **Pourquoi** : ${result.strengths.join(" ; ")}`,
     `- **Caractéristiques** : ${modelSpecLine(model)}`,
-    `- **Prix indicatif** : ${model.priceEur[0]} à ${model.priceEur[1]} € environ (à vérifier chez le distributeur)`,
+    model.priceCad
+      ? `- **Prix indicatif** : ${model.priceCad[0]} à ${model.priceCad[1]} $ CA environ (à vérifier chez le distributeur)`
+      : "- **Prix indicatif** : à vérifier chez le distributeur (non documenté ici)",
   ];
   if (result.cautions.length > 0) lines.push(`- **Limites / vigilance** : ${result.cautions.join(" ; ")}`);
   lines.push(`- **À vérifier** : version en cours, pointure et largeur disponible — ${modelSearchUrl(model)}`);

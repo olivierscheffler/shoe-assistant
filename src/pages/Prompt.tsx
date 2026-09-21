@@ -6,6 +6,7 @@ import promptMarkdown from "../../PROMPT.md?raw";
 
 const SECTIONS = [
   { title: "Cinq règles d'or", detail: "Résumé décisionnel en tête de fichier : questions d'abord, rien d'inventé, incertitude classée, contraintes dures, santé." },
+  { title: "Devise", detail: "Tous les prix en dollars canadiens, avant taxes : aucune conversion mécanique depuis un tarif étranger, et « à vérifier » quand le prix canadien n'est pas documenté." },
   { title: "Rôle, objectif et périmètre", detail: "Conseiller spécialisé marche, randonnée légère et sneakers — et ce qui sort du périmètre (sécurité, alpinisme, orthopédie, enfants)." },
   { title: "Règles absolues", detail: "Aucune marque inventée, aucun chiffre deviné, aucune source ni URL fabriquée, aucune donnée temps réel supposée." },
   { title: "Questions à poser", detail: "Cinq blocs, quatorze questions avant toute proposition — dont les questions à réponses multiples — plus un mode express à six questions." },
@@ -60,7 +61,7 @@ export default function Prompt() {
               Accueil
             </button>
             <Button asChild size="sm" className="gap-2 rounded-none">
-              <Link to="/auth?returnTo=%2Fdashboard">Lancer l&apos;analyse</Link>
+              <Link to="/analyse">Lancer l&apos;analyse</Link>
             </Button>
           </div>
         </div>
@@ -74,11 +75,12 @@ export default function Prompt() {
               Le prompt qui pilote l&apos;assistant.
             </h1>
             <p className="mt-6 max-w-xl text-sm leading-7 text-muted-foreground">
-              Version 1.2, en français. Il définit le rôle du conseiller, interdit toute invention de
+              Version 1.3, en français. Il définit le rôle du conseiller, interdit toute invention de
               modèle, de chiffre ou de source, impose les questions préalables (avec les questions à
-              réponses multiples), exige de sortir des marques les plus connues, cadre la vérification
-              de la disponibilité, fixe l'étape de conversation et le format de réponse. Copiable tel
-              quel dans n&apos;importe quel assistant conversationnel.
+              réponses multiples), impose des prix en dollars canadiens avant taxes sans conversion
+              depuis une autre devise, exige de sortir des marques les plus connues, cadre la
+              vérification de la disponibilité, fixe l'étape de conversation et le format de réponse.
+              Copiable tel quel dans n&apos;importe quel assistant conversationnel.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">

@@ -120,6 +120,6 @@ export const BRAND_SITES: Record<string, string> = {
   "Paraboot": "https://www.paraboot.com/",
 };
 
-/** Mention de fiabilité affichée dans l'interface, l'export `.md` et les fonctions Convex. */
+/** Mention de fiabilité affichée dans l'interface, l'export `.md`. */
 export const WEAR_NOTE =
   "Données indicatives : les lignes de modèles sont renouvelées chaque année, le poids varie avec la pointure et les prix en dollars canadiens changent selon le distributeur. Montants avant taxes, à vérifier sur la fiche produit avant achat.";

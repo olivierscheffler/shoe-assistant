@@ -83,7 +83,7 @@ const AVAILABILITY_LEVELS = [
 
 const EXCLUDED = [
   { name: "Altra Lone Peak", reason: "Terrain incompatible : ce modèle ne couvre pas l'asphalte majoritaire de votre usage." },
-  { name: "Nike Air Zoom Structure", reason: "Hors budget : 130 € minimum, soit plus de 15 % au-dessus de votre plafond." },
+  { name: "Nike Air Zoom Structure", reason: "Hors budget : à partir de 200 $ CA, soit plus de 15 % au-dessus de votre plafond." },
   { name: "Veja V-10", reason: "Ne respecte pas votre contrainte vegan sur la version cuir." },
 ];
 
@@ -113,6 +113,10 @@ const FAQ = [
     a: "Non. En cas de douleur plantaire, de tendinite, de hallux marqué, de pied diabétique ou de semelles orthopédiques, consultez un professionnel de santé. L'outil aide à préparer l'essai, il ne le remplace pas.",
   },
   {
+    q: "Faut-il créer un compte ?",
+    a: "Non. Il n'y a ni inscription, ni profil, ni base de données : vos réponses restent dans l'onglet du navigateur et disparaissent dès que vous rechargez la page. Rien n'est conservé, rien n'est transmis. Si vous voulez garder une trace, le bouton « Copier en .md » exporte le récapitulatif.",
+  },
+  {
     q: "Le prompt en Markdown est disponible ?",
     a: "Oui. Le prompt complet qui pilote l'assistant — règles, questions, méthode, format de réponse — est publié tel quel et copiable.",
   },
@@ -120,7 +124,7 @@ const FAQ = [
 
 export default function Landing() {
   const navigate = useNavigate();
-  const start = () => navigate("/auth?returnTo=%2Fdashboard");
+  const start = () => navigate("/analyse");
   const questionCount = STEPS.reduce((total, step) => total + step.questions.length, 0);
 
   return (
@@ -202,7 +206,7 @@ export default function Landing() {
               <div className="border-t border-border px-6 py-6">
                 <p className="micro">Exemple de résultat</p>
                 <p className="mt-3 text-xs leading-6 text-muted-foreground">
-                  Profil : marche urbaine, 15–30 km, pronation, pied large, 130–180 €.
+                  Profil : marche urbaine, 15–30 km, pronation, pied large, 200–280 $ CA.
                 </p>
                 <div className="mt-5 flex items-baseline justify-between gap-4">
                   <div>
@@ -492,7 +496,8 @@ export default function Landing() {
               Quelques questions, puis une liste courte et justifiée.
             </h2>
             <p className="mt-5 text-sm leading-6 text-muted-foreground">
-              Créez votre espace pour retrouver vos analyses et comparer vos profils dans le temps.
+              Ni compte, ni profil, ni données conservées : vous répondez, vous obtenez votre liste, et
+              vous copiez le récapitulatif en Markdown si vous voulez le garder.
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:items-end">
@@ -523,8 +528,8 @@ export default function Landing() {
               <a href="#criteres" className="transition-colors hover:text-foreground">Critères</a>
               <a href="#familles" className="transition-colors hover:text-foreground">Familles</a>
               <Link to="/prompt" className="transition-colors hover:text-foreground">Prompt .md</Link>
-              <Link to="/auth?returnTo=%2Fdashboard" className="transition-colors hover:text-foreground">
-                Se connecter
+              <Link to="/analyse" className="transition-colors hover:text-foreground">
+                Commencer l&apos;analyse
               </Link>
             </nav>
           </div>
