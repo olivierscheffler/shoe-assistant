@@ -15,7 +15,9 @@
  * - aucune marque ni aucun modèle inventé : uniquement des lignes de modèles existantes
  *   et suivies, sans numéro de version quand celui-ci change chaque année ;
  * - toute valeur chiffrée est *indicative* et affichée avec « ≈ » ;
- * - une valeur inconnue vaut `null` et s'affiche « à vérifier » plutôt qu'être devinée.
+ * - une valeur inconnue vaut `null` et s'affiche « à vérifier » plutôt qu'être devinée ;
+ * - tous les prix sont en **dollars canadiens, avant taxes**, sous forme de fourchette à
+ *   confirmer chez le distributeur (aucune conversion implicite depuis une autre devise).
  *
  * Ce fichier est du TypeScript pur (aucun import React / DOM) : il est utilisé à la fois
  * par le front et par les fonctions Convex.
