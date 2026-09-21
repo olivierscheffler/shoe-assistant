@@ -1,4 +1,9 @@
-.env.local
 node_modules
 dist
-src/convex/_generated
+
+.env.local
+.env*.local
+
+# Les types Convex générés (`src/convex/_generated`) sont versionnés volontairement :
+# sans eux, la compilation en CI (GitHub Actions) exige une clé de déploiement Convex.
+# Ils sont régénérés par `bun convex dev --once` ou `bunx convex deploy`.

@@ -115,7 +115,10 @@ createRoot(document.getElementById("root")!).render(
         <VlyToolbar />
       </ToolbarErrorBoundary>
       <ConvexAuthProvider client={convex}>
-        <BrowserRouter>
+        {/* `basename` suit le chemin de base du build (Vite `base`) : le site
+            fonctionne aussi bien à la racine qu'en sous-chemin, comme sur
+            GitHub Pages (https://utilisateur.github.io/depot/). */}
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
           <RouteSyncer />
           <Suspense fallback={<RouteLoading />}>
             <Routes>

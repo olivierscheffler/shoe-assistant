@@ -2,15 +2,16 @@
   "name": "Semelle — conseiller chaussures",
   "short_name": "Semelle",
   "description": "Conseil chaussures de marche et sneakers : questions d'abord, puis modèles adaptés avec leurs limites.",
-  "start_url": "/",
+  "start_url": ".",
+  "scope": ".",
   "display": "standalone",
   "background_color": "#fdfdfc",
   "theme_color": "#fdfdfc",
   "icons": [
     {
-      "src": "/logo.png",
+      "src": "logo.svg",
       "sizes": "any",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]

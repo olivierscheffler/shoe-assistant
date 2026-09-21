@@ -1,0 +1,84 @@
+# Déploiement du front sur GitHub Pages (+ backend Convex si une clé est fournie).
+#
+# Deux secrets à créer dans Settings → Secrets and variables → Actions :
+#   VITE_CONVEX_URL     URL du backend Convex, https://<deploiement>.convex.cloud (obligatoire)
+#   CONVEX_DEPLOY_KEY   clé de déploiement Convex (facultative : voir DEPLOY.md)
+#
+# Settings → Pages → Source = « GitHub Actions ».
+#
+# Si le dépôt s'appelle <utilisateur>.github.io (site racine), remplacez BASE_PATH par "/".
+
+name: Déployer le site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  BASE_PATH: /${{ github.event.repository.name }}/
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Installer les dépendances
+        run: bun install
+
+      # Facultatif : déploie les fonctions Convex (et régénère les types) quand la clé
+      # de déploiement est présente. Sinon, ce sont les types versionnés qui servent.
+      - name: Déployer le backend Convex
+        if: ${{ secrets.CONVEX_DEPLOY_KEY != '' }}
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: bunx convex deploy
+
+      - name: Vérifier la configuration
+        env:
+          VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL }}
+        run: |
+          if [ -z "$VITE_CONVEX_URL" ]; then
+            echo "::error::Secret VITE_CONVEX_URL manquant : ajoutez l'URL du backend Convex (https://xxx.convex.cloud)."
+            exit 1
+          fi
+
+      - name: Typecheck
+        run: bunx tsc -b --noEmit
+
+      - name: Build
+        env:
+          VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL }}
+        run: |
+          bunx vite build --base="$BASE_PATH"
+          # GitHub Pages ne connaît pas le routage d'une application monopage :
+          # 404.html sert la même application, qui rétablit ensuite la bonne route.
+          cp dist/index.html dist/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - id: pages
+        uses: actions/deploy-pages@v4
