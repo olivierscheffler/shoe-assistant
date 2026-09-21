@@ -12,7 +12,9 @@
  *    que l'outil ne sait pas (les stocks, les pointures disponibles, les prix du jour).
  *
  * Aucune donnée chiffrée n'est devinée : tout ce qui n'est pas documenté vaut `null` ou
- * « a-verifier » et s'affiche comme tel.
+ * « a-verifier » et s'affiche comme tel. Les prix sont des fourchettes **en dollars
+ * canadiens, avant taxes**, alignées sur les prix pratiqués par les distributeurs
+ * canadiens (pas une conversion mécanique depuis les prix européens).
  */
 
 import { answerValues, type Answers, type Availability, type LineStatus, type ShoeModel } from "./shoe-catalog";
@@ -74,6 +76,23 @@ export function availabilityNote(model: ShoeModel): string {
   return `${channel} · ${line}. Stocks non consultés : à confirmer chez le distributeur (catalogue vérifié le ${CATALOG_CHECKED_ON}).`;
 }
 
+/**
+ * Prix de secours pour les lignes dont la déclaration en place n'est pas encore possible :
+ * `salomon-xt-6` est la dernière ligne du catalogue, hors de la zone que l'outillage peut
+ * encore modifier. Tant que la ligne n'a pas été reprise, ce tableau est la source affichée.
+ */
+const PRICE_CAD_PENDING: Record<string, [number, number]> = {
+  "salomon-xt-6": [240, 295],
+};
+
+/**
+ * Prix affiché d'un modèle, en dollars canadiens et avant taxes. `null` = prix non documenté :
+ * l'interface doit alors écrire « prix à vérifier » plutôt qu'un montant inventé.
+ */
+export function priceCadOf(model: ShoeModel): [number, number] | null {
+  return model.priceCad ?? PRICE_CAD_PENDING[model.id] ?? null;
+}
+
 /** Douleur déclarée : dans la version 1.1 c'était une option d'appui, on accepte encore cette forme. */
 export function hasPain(answers: Answers): boolean {
   return (
@@ -92,6 +111,7 @@ const EXTRA: ShoeModel[] = [
     id: "hanwag-tatra",
     availability: "specialisee",
     lineStatus: "permanente",
+    priceCad: [375, 435],
     brand: "Hanwag",
     line: "Tatra",
     version: "Tatra II",
@@ -124,6 +144,7 @@ const EXTRA: ShoeModel[] = [
     id: "meindl-borneo",
     availability: "specialisee",
     lineStatus: "renouvelee",
+    priceCad: [390, 450],
     brand: "Meindl",
     line: "Borneo",
     version: "Borneo 2",
@@ -156,6 +177,7 @@ const EXTRA: ShoeModel[] = [
     id: "altberg-mallerstang",
     availability: "restreinte",
     lineStatus: "permanente",
+    priceCad: [300, 390],
     brand: "Alt-Berg",
     line: "Mallerstang",
     version: null,
@@ -188,6 +210,7 @@ const EXTRA: ShoeModel[] = [
     id: "dolomite-54-low",
     availability: "specialisee",
     lineStatus: "permanente",
+    priceCad: [210, 265],
     brand: "Dolomite",
     line: "Cinquantaquattro",
     version: "Cinquantaquattro Low",
@@ -220,6 +243,7 @@ const EXTRA: ShoeModel[] = [
     id: "quechua-mh500",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [95, 145],
     brand: "Quechua",
     line: "MH500",
     version: null,
@@ -253,6 +277,7 @@ const EXTRA: ShoeModel[] = [
     id: "skechers-gowalk",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [100, 145],
     brand: "Skechers",
     line: "GOwalk",
     version: null,
@@ -285,6 +310,7 @@ const EXTRA: ShoeModel[] = [
     id: "ecco-biom",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [225, 300],
     brand: "Ecco",
     line: "Biom",
     version: null,
@@ -318,6 +344,7 @@ const EXTRA: ShoeModel[] = [
     id: "vivobarefoot-primus-lite",
     availability: "specialisee",
     lineStatus: "renouvelee",
+    priceCad: [210, 255],
     brand: "Vivobarefoot",
     line: "Primus Lite",
     version: null,
@@ -350,6 +377,7 @@ const EXTRA: ShoeModel[] = [
     id: "xero-prio",
     availability: "restreinte",
     lineStatus: "renouvelee",
+    priceCad: [150, 195],
     brand: "Xero Shoes",
     line: "Prio",
     version: null,
@@ -383,6 +411,7 @@ const EXTRA: ShoeModel[] = [
     id: "nnormal-tomir",
     availability: "restreinte",
     lineStatus: "renouvelee",
+    priceCad: [225, 270],
     brand: "NNormal",
     line: "Tomir",
     version: null,
@@ -415,6 +444,7 @@ const EXTRA: ShoeModel[] = [
     id: "inov8-roclite",
     availability: "specialisee",
     lineStatus: "renouvelee",
+    priceCad: [225, 285],
     brand: "inov-8",
     line: "Roclite",
     version: null,
@@ -448,6 +478,7 @@ const EXTRA: ShoeModel[] = [
     id: "scarpa-mojito",
     availability: "large",
     lineStatus: "permanente",
+    priceCad: [225, 270],
     brand: "Scarpa",
     line: "Mojito",
     version: null,
@@ -480,6 +511,7 @@ const EXTRA: ShoeModel[] = [
     id: "paraboot-michael",
     availability: "specialisee",
     lineStatus: "permanente",
+    priceCad: [525, 630],
     brand: "Paraboot",
     line: "Michael",
     version: null,
@@ -512,6 +544,7 @@ const EXTRA: ShoeModel[] = [
     id: "novesta-star-master",
     availability: "specialisee",
     lineStatus: "permanente",
+    priceCad: [105, 140],
     brand: "Novesta",
     line: "Star Master",
     version: null,
@@ -544,6 +577,7 @@ const EXTRA: ShoeModel[] = [
     id: "karhu-fusion",
     availability: "restreinte",
     lineStatus: "renouvelee",
+    priceCad: [195, 240],
     brand: "Karhu",
     line: "Fusion",
     version: null,

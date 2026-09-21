@@ -169,8 +169,11 @@ export function recommend(answers: Answers): FullAdvice {
   }
   if (answerValues(answers, "essayage")[0] === "en-ligne")
     pending.push(
-      "Achat en ligne : commandez deux pointures et vérifiez la durée de retour sur la page du marchand (14 jours de rétractation légale au minimum, souvent plus chez les enseignes spécialisées) ainsi que l'état exigé de la paire.",
+      "Achat en ligne : commandez deux pointures et vérifiez la durée de retour annoncée par le marchand ainsi que l'état exigé de la paire. Au Canada, aucun délai de rétractation fédéral ne s'applique : c'est la politique du marchand et les lois provinciales qui encadrent le retour.",
     );
+  pending.push(
+    "Prix en dollars canadiens, avant taxes fédérales et provinciales, et hors frais de livraison.",
+  );
 
   return {
     matches: usable.slice(0, 4),
@@ -201,7 +204,7 @@ function tryOnPlan(answers: Answers): string[] {
   switch (answerValues(answers, "essayage")[0]) {
     case "en-ligne":
       plan.push(
-        "Achat en ligne : commandez deux pointures, essayez sur moquette, renvoyez celle qui ne va pas — vérifiez la fenêtre de retour avant de commander.",
+        "Achat en ligne : commandez deux pointures, essayez sur moquette, renvoyez celle qui ne va pas — vérifiez la fenêtre de retour annoncée avant de commander.",
       );
       break;
     case "magasin":

@@ -47,6 +47,7 @@ import {
   hasPain,
   LINE_STATUS_LABEL,
   MAINSTREAM_BRANDS,
+  priceCadOf,
 } from "./shoe-catalog-extra";
 
 /* -------------------------------------------------------------------------- */
@@ -115,13 +116,25 @@ const TERRAIN_PHRASE: Record<Terrain, string> = {
   mixte: "terrains variés",
 };
 
+/**
+ * Plafonds de budget en dollars canadiens (avant taxes). Les anciennes bandes en euros sont
+ * conservées avec leur plafond équivalent pour que les analyses déjà enregistrées continuent
+ * d'être filtrées correctement.
+ */
 const BUDGET_MAX: Record<string, number> = {
-  "moins-80": 80,
-  "80-130": 130,
-  "130-180": 180,
-  "180-plus": 400,
+  "moins-120": 120,
+  "120-200": 200,
+  "200-280": 280,
+  "280-plus": 600,
   flexible: Number.POSITIVE_INFINITY,
+  "moins-80": 120,
+  "80-130": 200,
+  "130-180": 280,
+  "180-plus": 600,
 };
+
+/** Devise affichée dans toute l'application. */
+export const CURRENCY = "$ CA";
 
 /** Usages voisins : une paire de marche active dépanne en randonnée légère, pas l'inverse. */
 const NEIGHBOUR_USAGES: Record<Usage, Usage[]> = {
@@ -420,21 +433,27 @@ function scoreWeather(model: ShoeModel, c: Criteria, s: Scorer) {
 
 function scoreBudget(model: ShoeModel, c: Criteria, s: Scorer) {
   const max = 9;
+  const price = priceCadOf(model);
+  if (price === null) {
+    s.points += max / 2;
+    caution(s, "Prix non documenté ici : à vérifier avant de le comparer à votre budget");
+    return;
+  }
   if (c.budget === undefined || !Number.isFinite(c.budget)) {
     s.points += max;
     return;
   }
-  const [min, maxPrice] = model.priceEur;
+  const [min, maxPrice] = price;
   if (min <= c.budget) {
-    add(s, max, `Dans votre budget (${min}–${maxPrice} € environ)`);
+    add(s, max, `Dans votre budget (${min} à ${maxPrice} ${CURRENCY} avant taxes)`);
     return;
   }
   if (min <= c.budget * 1.15) {
     s.points += 4;
-    caution(s, `Légèrement au-dessus de votre budget : à partir de ${min} € environ`);
+    caution(s, `Légèrement au-dessus de votre budget : à partir de ${min} ${CURRENCY} avant taxes`);
     return;
   }
-  block(s, `Hors budget : ${min} € minimum, soit plus de 15 % au-dessus de votre plafond`);
+  block(s, `Hors budget : ${min} ${CURRENCY} minimum, soit plus de 15 % au-dessus de votre plafond`);
 }
 
 function scoreFit(model: ShoeModel, c: Criteria, s: Scorer) {
@@ -628,7 +647,7 @@ export function recommend(answers: Answers): Advice {
   const pending = availabilityNotes(answers, criteria, matches);
   pending.push(`Versions annuelles : les modèles sont renouvelés, vérifiez la référence en cours sur le site de la marque.`);
   pending.push(
-    "Poids, drop et prix affichés sont des ordres de grandeur (pointure de référence et prix distributeur) : à vérifier avant achat.",
+    `Poids et drop affichés sont des ordres de grandeur (pointure de référence), et les prix sont des fourchettes en ${CURRENCY} avant taxes, alignées sur le marché canadien : à vérifier avant achat.`,
   );
 
   return {
@@ -667,8 +686,11 @@ function availabilityNotes(answers: Answers, criteria: Criteria, matches: MatchR
     );
   if (criteria.disponibilite === "en-ligne")
     notes.push(
-      "Achat en ligne : commandez deux pointures si le retour est gratuit, et vérifiez la durée de retour du marchand (14 jours de rétractation légale au minimum en Europe).",
+      "Achat en ligne : commandez deux pointures si le retour est gratuit. Au Canada, il n'existe pas de délai de rétractation fédéral général : c'est la politique du marchand qui s'applique, encadrée par les lois provinciales (au Québec, la Loi sur la protection du consommateur). Vérifiez la durée de retour annoncée avant de commander.",
     );
+  notes.push(
+    `Prix affichés en ${CURRENCY} avant taxes : la TPS/TVH ou la TVQ s'ajoutent selon la province, et les frais de livraison ne sont pas comptés.`,
+  );
   if (!isAnswered(answers, "disponibilite"))
     notes.push("Canal d'achat non précisé : la sélection n'a pas écarté les lignes au réseau de vente très étroit.");
 
@@ -697,6 +719,7 @@ function availabilityNotes(answers: Answers, criteria: Criteria, matches: MatchR
 
 export function resultToMarkdown(result: MatchResult): string {
   const { model } = result;
+  const price = priceCadOf(model);
   const spec = [
     supportText(model.support),
     `amorti ${cushionLabel(model.cushioning)}`,
@@ -717,7 +740,9 @@ export function resultToMarkdown(result: MatchResult): string {
     "",
     `- **Pourquoi** : ${result.strengths.join(" ; ")}`,
     `- **Caractéristiques** : ${spec}`,
-    `- **Prix indicatif** : ${model.priceEur[0]} à ${model.priceEur[1]} € environ (à vérifier chez le distributeur)`,
+    price
+      ? `- **Prix indicatif** : ${price[0]} à ${price[1]} ${CURRENCY} avant taxes (à vérifier chez le distributeur canadien)`
+      : "- **Prix indicatif** : à vérifier — prix non documenté ici",
     `- **Disponibilité** : ${availabilityNote(model)}`,
   ];
   if (result.cautions.length > 0) lines.push(`- **Limites / vigilance** : ${result.cautions.join(" ; ")}`);

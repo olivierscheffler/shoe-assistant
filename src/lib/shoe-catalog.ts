@@ -126,8 +126,11 @@ export interface ShoeModel {
    */
   availability: Availability;
   lineStatus: LineStatus;
-  /** Fourchette de prix indicative en euros, à vérifier chez le distributeur. */
-  priceEur: [number, number];
+  /**
+   * Prix affiché : fourchette indicative **en dollars canadiens, avant taxes**, à vérifier
+   * chez le distributeur. Une valeur absente se lit « prix à vérifier » via `priceCadOf`.
+   */
+  priceCad?: [number, number];
   style: Style[];
   highlights: string[];
   caveats: string[];
@@ -270,12 +273,13 @@ export const QUESTIONS: Record<QuestionId, Question> = {
   },
   budget: {
     id: "budget",
-    label: "Budget maximum",
+    label: "Budget maximum (dollars canadiens, avant taxes)",
+    help: "Fourchettes en dollars canadiens, avant taxes fédérales et provinciales. Le budget sert de plafond : les prix affichés en magasin s'entendent avant taxes et hors livraison.",
     options: [
-      { value: "moins-80", label: "Moins de 80 €" },
-      { value: "80-130", label: "80 à 130 €" },
-      { value: "130-180", label: "130 à 180 €" },
-      { value: "180-plus", label: "Au-delà de 180 €", hint: "Si c'est justifié" },
+      { value: "moins-120", label: "Moins de 120 $ CA" },
+      { value: "120-200", label: "120 à 200 $ CA" },
+      { value: "200-280", label: "200 à 280 $ CA" },
+      { value: "280-plus", label: "Au-delà de 280 $ CA", hint: "Si c'est justifié" },
       { value: "flexible", label: "Le prix n'est pas un frein" },
     ],
   },
@@ -398,9 +402,25 @@ export const QUESTION_ORDER: QuestionId[] = [
   "priorite",
 ];
 
+/**
+ * Libellés des réponses d'analyses plus anciennes : les bandes de budget étaient en euros et
+ * « douleurs » était une option d'appui. On les réaffiche proprement dans l'historique au lieu
+ * de laisser apparaître un code brut.
+ */
+const LEGACY_OPTION_LABELS: Partial<Record<QuestionId, Record<string, string>>> = {
+  budget: {
+    "moins-80": "Moins de 120 $ CA (ancienne bande : moins de 80 €)",
+    "80-130": "120 à 200 $ CA (ancienne bande : 80 à 130 €)",
+    "130-180": "200 à 280 $ CA (ancienne bande : 130 à 180 €)",
+    "180-plus": "Au-delà de 280 $ CA (ancienne bande : 180 € et plus)",
+  },
+  appui: { douleurs: "Douleurs récurrentes" },
+};
+
 export function optionLabel(id: QuestionId, value: string): string {
   const option = QUESTIONS[id].options.find((o) => o.value === value);
-  return option ? option.label : value;
+  if (option) return option.label;
+  return LEGACY_OPTION_LABELS[id]?.[value] ?? value;
 }
 
 export function answerValues(answers: Answers, id: QuestionId): string[] {
@@ -475,13 +495,16 @@ export function modelName(model: ShoeModel): string {
   return model.version ? `${model.brand} ${model.version}` : `${model.brand} ${model.line}`;
 }
 
-/** Lien de recherche : toujours valide, il laisse l'utilisateur vérifier la version en cours. */
+/**
+ * Lien de recherche : toujours valide, il laisse l'utilisateur vérifier la version en cours et
+ * son prix chez les distributeurs canadiens.
+ */
 export function modelSearchUrl(model: ShoeModel): string {
-  return `https://www.google.com/search?q=${encodeURIComponent(modelName(model))}`;
+  return `https://www.google.com/search?q=${encodeURIComponent(`${modelName(model)} prix Canada`)}`;
 }
 
 export const WEAR_NOTE =
-  "Données indicatives : les lignes de modèles sont renouvelées chaque année, le poids varie avec la pointure et les prix changent selon le distributeur. Vérifiez la fiche produit avant achat.";
+  "Données indicatives : les lignes de modèles sont renouvelées chaque année, le poids varie avec la pointure et les prix en dollars canadiens changent selon le distributeur. Montants avant taxes, à vérifier sur la fiche produit avant achat.";
 
 export const CATALOG: ShoeModel[] = [
   /* ---------------------------------------------------------------- marche */
@@ -489,6 +512,7 @@ export const CATALOG: ShoeModel[] = [
     id: "hoka-bondi",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [250, 285],
     brand: "HOKA",
     line: "Bondi",
     version: "Bondi 9",
@@ -506,7 +530,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [170, 200],
     style: ["sport", "street"],
     highlights: [
       "Amorti maximal : la référence pour rester debout et marcher longtemps sur dur",
@@ -521,6 +544,7 @@ export const CATALOG: ShoeModel[] = [
     id: "hoka-clifton",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [210, 245],
     brand: "HOKA",
     line: "Clifton",
     version: null,
@@ -538,7 +562,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [140, 165],
     style: ["sport", "street"],
     highlights: [
       "Bon compromis amorti / poids pour la marche quotidienne",
@@ -550,6 +573,7 @@ export const CATALOG: ShoeModel[] = [
     id: "hoka-gaviota",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [240, 275],
     brand: "HOKA",
     line: "Gaviota",
     version: "Gaviota 5",
@@ -567,7 +591,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [160, 185],
     style: ["sport"],
     highlights: [
       "Amorti maximal et renfort de stabilité : rare combinaison",
@@ -579,6 +602,7 @@ export const CATALOG: ShoeModel[] = [
     id: "hoka-arahi",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [210, 245],
     brand: "HOKA",
     line: "Arahi",
     version: null,
@@ -596,7 +620,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [140, 165],
     style: ["sport"],
     highlights: ["Renfort de stabilité plus souple que les modèles traditionnels", "Assez légère pour la marche urbaine"],
     caveats: ["Stabilité plus légère que celle d'un modèle dit « motion control »"],
@@ -605,6 +628,7 @@ export const CATALOG: ShoeModel[] = [
     id: "brooks-ghost",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [210, 240],
     brand: "Brooks",
     line: "Ghost",
     version: null,
@@ -622,7 +646,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [140, 160],
     style: ["sport", "street"],
     highlights: [
       "Valeur sûre de la marche et de la course facile, très disponible en magasin",
@@ -634,6 +657,7 @@ export const CATALOG: ShoeModel[] = [
     id: "brooks-glycerin",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [250, 285],
     brand: "Brooks",
     line: "Glycerin",
     version: null,
@@ -651,7 +675,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [170, 190],
     style: ["sport"],
     highlights: ["Amorti moelleux et très bon confort immédiat", "Tige confortable, peu d'échauffements"],
     caveats: ["Moins stable si vous avez besoin de rigidité"],
@@ -660,6 +683,7 @@ export const CATALOG: ShoeModel[] = [
     id: "brooks-adrenaline-gts",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [210, 240],
     brand: "Brooks",
     line: "Adrenaline GTS",
     version: null,
@@ -677,7 +701,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [140, 160],
     style: ["sport"],
     highlights: [
       "Renfort de stabilité discret, qui ne force pas le pied",
@@ -689,6 +712,7 @@ export const CATALOG: ShoeModel[] = [
     id: "asics-nimbus",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [265, 310],
     brand: "ASICS",
     line: "GEL-Nimbus",
     version: null,
@@ -706,7 +730,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [180, 210],
     style: ["sport"],
     highlights: [
       "Amorti maximal très apprécié sur bitume et longues marches",
@@ -718,6 +741,7 @@ export const CATALOG: ShoeModel[] = [
     id: "asics-cumulus",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [210, 240],
     brand: "ASICS",
     line: "GEL-Cumulus",
     version: null,
@@ -735,7 +759,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [140, 160],
     style: ["sport"],
     highlights: ["Polyvalente et confortable dès la sortie du carton", "Bon rapport amorti / prix"],
     caveats: ["Semelle extérieure qui s'use vite sur gravier abrasif"],
@@ -744,6 +767,7 @@ export const CATALOG: ShoeModel[] = [
     id: "asics-kayano",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [265, 310],
     brand: "ASICS",
     line: "GEL-Kayano",
     version: null,
@@ -761,7 +785,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [180, 210],
     style: ["sport"],
     highlights: [
       "Le modèle de stabilité le plus régulier du marché, décliné en largeurs",
@@ -773,6 +796,7 @@ export const CATALOG: ShoeModel[] = [
     id: "saucony-triumph",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [265, 310],
     brand: "Saucony",
     line: "Triumph",
     version: null,
@@ -790,7 +814,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [180, 210],
     style: ["sport"],
     highlights: ["Amorti généreux et progressif, très confortable sur longue distance", "Tige douce, peu de coutures génantes"],
     caveats: ["Prix en hausse à chaque génération"],
@@ -799,6 +822,7 @@ export const CATALOG: ShoeModel[] = [
     id: "saucony-guide",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [210, 245],
     brand: "Saucony",
     line: "Guide",
     version: null,
@@ -816,7 +840,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [140, 165],
     style: ["sport"],
     highlights: ["Stabilité par la géométrie de la semelle, sans bloc dur", "Drop modéré, adapté aux appuis bas"],
     caveats: ["Amorti juste pour un usage intensif au-delà de 90 kg"],
@@ -825,6 +848,7 @@ export const CATALOG: ShoeModel[] = [
     id: "nb-1080",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [265, 310],
     brand: "New Balance",
     line: "Fresh Foam X 1080",
     version: "v14",
@@ -842,7 +866,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "partiel",
     repairable: false,
-    priceEur: [180, 210],
     style: ["sport", "discret"],
     highlights: [
       "Amorti maximal, tailles larges largement distribuées",
@@ -854,6 +877,7 @@ export const CATALOG: ShoeModel[] = [
     id: "nb-860",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [210, 245],
     brand: "New Balance",
     line: "Fresh Foam X 860",
     version: null,
@@ -871,7 +895,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [140, 165],
     style: ["sport"],
     highlights: ["Stabilité efficace disponible en 2E et 4E", "Semelle tolérante pour les longues stations debout"],
     caveats: ["Peu d'options imperméables"],
@@ -880,6 +903,7 @@ export const CATALOG: ShoeModel[] = [
     id: "mizuno-wave-rider",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [210, 245],
     brand: "Mizuno",
     line: "Wave Rider",
     version: null,
@@ -897,7 +921,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [140, 165],
     style: ["sport"],
     highlights: ["Semelle durable, très bon maintien pour un modèle neutre", "Poids contenu"],
     caveats: ["Drop élevé et sensation de semelle plus ferme qu'un amorti maximal"],
@@ -906,6 +929,7 @@ export const CATALOG: ShoeModel[] = [
     id: "mizuno-wave-inspire",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [210, 245],
     brand: "Mizuno",
     line: "Wave Inspire",
     version: null,
@@ -923,7 +947,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [140, 165],
     style: ["sport"],
     highlights: ["Renfort anti-pronation sur toute la longueur", "Très bonne longévité de semelle"],
     caveats: ["Drop de 12 mm à tester si vous êtes sensible du mollet"],
@@ -932,6 +955,7 @@ export const CATALOG: ShoeModel[] = [
     id: "nike-pegasus",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [190, 215],
     brand: "Nike",
     line: "Air Zoom Pegasus",
     version: null,
@@ -949,7 +973,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [130, 145],
     style: ["sport", "street"],
     highlights: ["Très répandue : facile à essayer en magasin et souvent soldée", "Polyvalente pour la marche urbaine"],
     caveats: ["Chaussant plutôt étroit, pas de version large en Europe", "Amorti moyen pour de longues distances"],
@@ -958,6 +981,7 @@ export const CATALOG: ShoeModel[] = [
     id: "nike-structure",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [190, 225],
     brand: "Nike",
     line: "Air Zoom Structure",
     version: null,
@@ -975,7 +999,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [130, 150],
     style: ["sport"],
     highlights: ["Renfort de stabilité au prix le plus accessible du catalogue", "Bonne accroche sur bitume humide"],
     caveats: ["Pas de version large, amorti moyen"],
@@ -984,6 +1007,7 @@ export const CATALOG: ShoeModel[] = [
     id: "nike-vomero",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [235, 265],
     brand: "Nike",
     line: "Vomero",
     version: null,
@@ -1001,7 +1025,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [160, 180],
     style: ["sport", "street"],
     highlights: ["Amorti maximal très souple, agréable en marche urbaine", "Look reconnaissable, porté au quotidien"],
     caveats: ["Chaussant étroit et pas de version large", "Semelle épaisse, moins de sensations"],
@@ -1010,6 +1033,7 @@ export const CATALOG: ShoeModel[] = [
     id: "on-cloudmonster",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [250, 280],
     brand: "On",
     line: "Cloudmonster",
     version: null,
@@ -1027,7 +1051,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [170, 190],
     style: ["sport", "street"],
     highlights: ["Très bon compromis confort / style pour la marche urbaine", "Semelle à modules qui garde du dynamisme"],
     caveats: ["Rigidité inhabituelle si vous venez d'une semelle classique"],
@@ -1036,6 +1059,7 @@ export const CATALOG: ShoeModel[] = [
     id: "on-cloud",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [220, 250],
     brand: "On",
     line: "Cloud",
     version: null,
@@ -1053,7 +1077,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [150, 170],
     style: ["discret", "street"],
     highlights: ["Sneaker discrète, facile à porter avec tout", "Confortable pour la marche quotidienne légère"],
     caveats: ["Ce n'est pas une chaussure d'endurance : s'écrase vite au-delà de 15 km par semaine"],
@@ -1062,6 +1085,7 @@ export const CATALOG: ShoeModel[] = [
     id: "altra-paradigm",
     availability: "specialisee",
     lineStatus: "renouvelee",
+    priceCad: [250, 285],
     brand: "Altra",
     line: "Paradigm",
     version: null,
@@ -1079,7 +1103,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [170, 190],
     style: ["sport"],
     highlights: [
       "Amorti maximal à drop nul et avant-pied large : la meilleure option si vos orteils sont comprimés",
@@ -1094,6 +1117,7 @@ export const CATALOG: ShoeModel[] = [
     id: "topo-phantom",
     availability: "specialisee",
     lineStatus: "renouvelee",
+    priceCad: [235, 265],
     brand: "Topo Athletic",
     line: "Phantom",
     version: null,
@@ -1111,7 +1135,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [160, 180],
     style: ["sport"],
     highlights: [
       "Avant-pied anatomique large, très efficace contre les ampoules entre les orteils",
@@ -1123,6 +1146,7 @@ export const CATALOG: ShoeModel[] = [
     id: "mephisto-match",
     availability: "large",
     lineStatus: "permanente",
+    priceCad: [300, 370],
     brand: "Mephisto",
     line: "Match",
     version: null,
@@ -1140,7 +1164,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "non",
     madeInEurope: "partiel",
     repairable: true,
-    priceEur: [200, 250],
     style: ["discret"],
     highlights: [
       "Chaussure de marche classique, cuir, réparable et ressemblable chez le cordonnier",
@@ -1154,6 +1177,7 @@ export const CATALOG: ShoeModel[] = [
     id: "salomon-x-ultra-5",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [220, 265],
     brand: "Salomon",
     line: "X Ultra 5 GTX",
     version: null,
@@ -1171,7 +1195,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [150, 180],
     style: ["outdoor", "sport"],
     highlights: [
       "Maintien du pied et accroche excellent sur chemins et sentiers",
@@ -1186,6 +1209,7 @@ export const CATALOG: ShoeModel[] = [
     id: "salomon-x-ultra-5-mid",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [265, 310],
     brand: "Salomon",
     line: "X Ultra 5 Mid GTX",
     version: null,
@@ -1203,7 +1227,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [180, 210],
     style: ["outdoor"],
     highlights: [
       "Tige montante : cheville maintenue avec sac et dénivelé",
@@ -1215,6 +1238,7 @@ export const CATALOG: ShoeModel[] = [
     id: "salomon-x-ultra-360",
     availability: "specialisee",
     lineStatus: "renouvelee",
+    priceCad: [190, 225],
     brand: "Salomon",
     line: "X Ultra 360 GTX",
     version: null,
@@ -1232,7 +1256,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [130, 150],
     style: ["outdoor"],
     highlights: ["Point d'entrée de la gamme randonnée Salomon, étanche", "Assez sobre pour la ville et les balades"],
     caveats: ["Semelle plus ferme que la gamme X Ultra 5", "Chaussant étroit"],
@@ -1241,6 +1264,7 @@ export const CATALOG: ShoeModel[] = [
     id: "merrell-moab",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [175, 220],
     brand: "Merrell",
     line: "Moab",
     version: null,
@@ -1258,7 +1282,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [120, 150],
     style: ["outdoor"],
     highlights: [
       "Déclinée en version ventilée ou imperméable, et en tailles larges",
@@ -1273,6 +1296,7 @@ export const CATALOG: ShoeModel[] = [
     id: "merrell-moab-speed",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [210, 250],
     brand: "Merrell",
     line: "Moab Speed 2 GTX",
     version: null,
@@ -1290,7 +1314,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [140, 170],
     style: ["outdoor", "sport"],
     highlights: ["Plus légère et plus amortissante que la Moab classique", "Étanche, bon compromis marche rapide et rando"],
     caveats: ["Moins durable que le cuir sur un usage très intensif"],
@@ -1299,6 +1322,7 @@ export const CATALOG: ShoeModel[] = [
     id: "keen-targhee",
     availability: "specialisee",
     lineStatus: "renouvelee",
+    priceCad: [220, 265],
     brand: "Keen",
     line: "Targhee",
     version: null,
@@ -1316,7 +1340,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "non",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [150, 180],
     style: ["outdoor"],
     highlights: [
       "Bout renforcé et avant-pied large : référence pour les pieds larges et les orteils sensibles",
@@ -1328,6 +1351,7 @@ export const CATALOG: ShoeModel[] = [
     id: "lowa-renegade",
     availability: "specialisee",
     lineStatus: "renouvelee",
+    priceCad: [280, 340],
     brand: "Lowa",
     line: "Renegade GTX Mid",
     version: null,
@@ -1345,7 +1369,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "partiel",
     repairable: true,
-    priceEur: [190, 230],
     style: ["outdoor", "discret"],
     highlights: [
       "Cuir, tige montante, très durable et ressemelable par un cordonnier",
@@ -1357,6 +1380,7 @@ export const CATALOG: ShoeModel[] = [
     id: "hoka-kaha",
     availability: "specialisee",
     lineStatus: "renouvelee",
+    priceCad: [295, 340],
     brand: "HOKA",
     line: "Kaha GTX",
     version: null,
@@ -1374,7 +1398,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [200, 230],
     style: ["outdoor", "sport"],
     highlights: ["Amorti maximal dans une tige montante étanche", "Très confortable si vous avez mal aux pieds en fin de rando"],
     caveats: ["Lourde et volumineuse", "Base haute : moins de stabilité latérale sur terrain très irrégulier"],
@@ -1385,6 +1408,7 @@ export const CATALOG: ShoeModel[] = [
     id: "salomon-speedcross",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [210, 245],
     brand: "Salomon",
     line: "Speedcross",
     version: null,
@@ -1402,7 +1426,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [140, 165],
     style: ["outdoor", "sport"],
     highlights: ["Crampons profonds : accroche exceptionnelle en boue et sol meuble", "Maintien du pied très ferme"],
     caveats: ["Semelle agressive désagréable sur asphalte", "Chaussant étroit"],
@@ -1411,6 +1434,7 @@ export const CATALOG: ShoeModel[] = [
     id: "hoka-speedgoat",
     availability: "specialisee",
     lineStatus: "renouvelee",
+    priceCad: [235, 275],
     brand: "HOKA",
     line: "Speedgoat",
     version: null,
@@ -1428,7 +1452,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [160, 185],
     style: ["outdoor", "sport"],
     highlights: ["Amorti important et accroche solide : bon compromis longues sorties sur sentier", "Version imperméable disponible"],
     caveats: ["Durabilité moyenne sur rocher abrasif", "Peu de protection contre les cailloux sous le pied"],
@@ -1437,6 +1460,7 @@ export const CATALOG: ShoeModel[] = [
     id: "brooks-cascadia",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [210, 240],
     brand: "Brooks",
     line: "Cascadia",
     version: null,
@@ -1454,7 +1478,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [140, 160],
     style: ["outdoor"],
     highlights: ["Trail relativement stable, adapté aux longues randonnées sur sentier", "Existe en version imperméable et en largeur large"],
     caveats: ["Moins agile qu'un modèle de trail rapide"],
@@ -1463,6 +1486,7 @@ export const CATALOG: ShoeModel[] = [
     id: "asics-trabuco",
     availability: "large",
     lineStatus: "renouvelee",
+    priceCad: [210, 250],
     brand: "ASICS",
     line: "GEL-Trabuco",
     version: null,
@@ -1480,7 +1504,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [140, 170],
     style: ["outdoor", "sport"],
     highlights: ["Protection renforcée sur l'avant du pied, rassurante sur cailloux", "Version GORE-TEX disponible"],
     caveats: ["Semelle assez rigide au début"],
@@ -1489,6 +1512,7 @@ export const CATALOG: ShoeModel[] = [
     id: "altra-lone-peak",
     availability: "specialisee",
     lineStatus: "renouvelee",
+    priceCad: [220, 260],
     brand: "Altra",
     line: "Lone Peak",
     version: null,
@@ -1506,7 +1530,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "non",
     repairable: false,
-    priceEur: [150, 175],
     style: ["outdoor", "sport"],
     highlights: [
       "Avant-pied large et drop nul : idéale si vos orteils souffrent en descente",
@@ -1521,6 +1544,7 @@ export const CATALOG: ShoeModel[] = [
     id: "la-sportiva-ultra-raptor",
     availability: "specialisee",
     lineStatus: "renouvelee",
+    priceCad: [235, 280],
     brand: "La Sportiva",
     line: "Ultra Raptor",
     version: null,
@@ -1538,7 +1562,6 @@ export const CATALOG: ShoeModel[] = [
     vegan: "a-verifier",
     madeInEurope: "a-verifier",
     repairable: false,
-    priceEur: [160, 190],
     style: ["outdoor"],
     highlights: ["Très bon maintien en terrain technique, semelle adhérente sur rocher", "Marque italienne, production en partie européenne"],
     caveats: ["Chaussant étroit et plutôt ferme", "À réserver aux terrains techniques"],
@@ -1549,6 +1572,7 @@ export const CATALOG: ShoeModel[] = [
     id: "veja-v10",
     availability: "large",
     lineStatus: "permanente",
+    priceCad: [195, 240],
     brand: "Veja",
     line: "V-10",
     version: null,
@@ -1566,7 +1590,6 @@ export const CATALOG: ShoeModel[] = [
     madeInEurope: "non",
     repairable: false,
     wideFit: false,
-    priceEur: [130, 160],
     style: ["discret", "street"],
     highlights: [
       "Sneaker discrète et intemporelle, matières tracées (coton bio, caoutchouc amazonien)",
@@ -1582,6 +1605,7 @@ export const CATALOG: ShoeModel[] = [
     id: "allbirds-tree-runner",
     availability: "specialisee",
     lineStatus: "permanente",
+    priceCad: [165, 210],
     brand: "Allbirds",
     line: "Tree Runner",
     version: null,
@@ -1599,7 +1623,6 @@ export const CATALOG: ShoeModel[] = [
     madeInEurope: "non",
     repairable: false,
     wideFit: false,
-    priceEur: [110, 140],
     style: ["discret"],
     highlights: [
       "Sans matière animale, lavable en machine, très légère",
@@ -1614,6 +1637,7 @@ export const CATALOG: ShoeModel[] = [
     id: "adidas-samba",
     availability: "large",
     lineStatus: "permanente",
+    priceCad: [120, 170],
     brand: "adidas",
     line: "Samba OG",
     version: null,
@@ -1643,6 +1667,7 @@ export const CATALOG: ShoeModel[] = [
     id: "nb-574",
     availability: "large",
     lineStatus: "permanente",
+    priceCad: [110, 150],
     brand: "New Balance",
     line: "574",
     version: null,
