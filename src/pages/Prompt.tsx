@@ -5,12 +5,14 @@ import { toast } from "sonner";
 import promptMarkdown from "../../PROMPT.md?raw";
 
 const SECTIONS = [
-  { title: "Rôle et objectif", detail: "Conseiller spécialisé marche, randonnée légère et sneakers ; produire une liste courte et justifiée." },
-  { title: "Règles absolues", detail: "Questions d'abord, aucune marque inventée, aucun chiffre deviné, contraintes dures respectées." },
-  { title: "Questions à poser", detail: "Cinq blocs, treize questions, posées avant toute proposition." },
-  { title: "Méthode d'analyse", detail: "Usage et terrain éliminatoires, puis support, amorti, chaussant, contraintes, style." },
-  { title: "Format de réponse", detail: "Ce que j'ai compris, modèles retenus, modèles écartés, à vérifier." },
-  { title: "Garde-fous", detail: "Anti-hallucination, reprise si réponses partielles, rappel professionnel de santé." },
+  { title: "Cinq règles d'or", detail: "Résumé décisionnel en tête de fichier : questions d'abord, rien d'inventé, incertitude classée, contraintes dures, santé." },
+  { title: "Rôle, objectif et périmètre", detail: "Conseiller spécialisé marche, randonnée légère et sneakers — et ce qui sort du périmètre (sécurité, alpinisme, orthopédie, enfants)." },
+  { title: "Règles absolues", detail: "Aucune marque inventée, aucun chiffre deviné, aucune source ni URL fabriquée, aucune donnée temps réel supposée." },
+  { title: "Questions à poser", detail: "Cinq blocs, treize questions avant toute proposition, plus un mode express à six questions." },
+  { title: "Méthode d'analyse", detail: "Usage et terrain éliminatoires, puis support, amorti, chaussant, contraintes, style ; indice de correspondance assumé." },
+  { title: "Machine à états", detail: "Cadrage, questions, propositions, arbitrage, synthèse : l'étape en cours est toujours explicite." },
+  { title: "Format de réponse", detail: "Ce que j'ai compris, 3 à 5 modèles, modèles écartés, essai, à vérifier — sous un budget de longueur." },
+  { title: "Garde-fous", detail: "Anti-hallucination, reprise si réponses partielles, checklist d'auto-vérification, rappel professionnel de santé." },
 ];
 
 export default function Prompt() {
@@ -71,9 +73,10 @@ export default function Prompt() {
               Le prompt qui pilote l&apos;assistant.
             </h1>
             <p className="mt-6 max-w-xl text-sm leading-7 text-muted-foreground">
-              Version 1.0, en français. Il définit le rôle du conseiller, interdit toute invention de
-              modèle ou de chiffre, impose les questions préalables et fixe le format de réponse.
-              Copiable tel quel dans n&apos;importe quel assistant conversationnel.
+              Version 1.1, en français. Il définit le rôle du conseiller, interdit toute invention de
+              modèle, de chiffre ou de source, impose les questions préalables, cadre le périmètre,
+              fixe l'étape de conversation et le format de réponse. Copiable tel quel dans
+              n&apos;importe quel assistant conversationnel.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -98,7 +101,7 @@ export default function Prompt() {
 
             <p className="mt-10 text-xs leading-6 text-muted-foreground">
               L&apos;espace d&apos;analyse de ce site applique exactement les mêmes règles, avec un
-              classement déterministe sur treize critères et les exclusions affichées.
+              classement déterministe sur treize critères pondérés et les exclusions affichées.
             </p>
           </div>
 

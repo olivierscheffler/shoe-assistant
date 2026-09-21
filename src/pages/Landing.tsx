@@ -34,7 +34,7 @@ const FAMILIES = [
   { label: "Randonnée", brands: "Salomon X Ultra · Merrell Moab & Moab Speed · Keen Targhee · Lowa Renegade · HOKA Kaha" },
   { label: "Sentiers techniques", brands: "Salomon Speedcross · HOKA Speedgoat · Brooks Cascadia · ASICS GEL-Trabuco · Altra Lone Peak · La Sportiva Ultra Raptor" },
   { label: "Pied large, avant-pied libre", brands: "Altra · Topo Athletic · Keen · New Balance et Brooks en largeurs 2E / 4E" },
-  { label: "Lifestyle et vegan", brands: "Veja · Allbirds · adidas Samba · New Balance 574 · Salomon XT-6" },
+  { label: "Lifestyle et matières", brands: "Veja · Allbirds · adidas Samba · New Balance 574 · Salomon XT-6 — vegan uniquement sur certaines déclinaisons : ni les Allbirds en laine ni les Samba en cuir ne sont vegan" },
 ];
 
 const DATA_LEVELS = [

@@ -166,7 +166,7 @@ export function recommend(answers: Answers): FullAdvice {
   }
   if (answerValues(answers, "essayage")[0] === "en-ligne")
     pending.push(
-      "Achat en ligne : commandez deux pointures et vérifiez la durée de retour (souvent 30 jours) ainsi que l'état exigé de la paire.",
+      "Achat en ligne : commandez deux pointures et vérifiez la durée de retour sur la page du marchand (14 jours de rétractation légale au minimum, souvent plus chez les enseignes spécialisées) ainsi que l'état exigé de la paire.",
     );
 
   return {
@@ -213,7 +213,7 @@ function tryOnPlan(answers: Answers): string[] {
       break;
     default:
       plan.push(
-        "Privilégiez un point de vente avec retour sous 30 jours : la bonne pointure se décide à l'essai, pas sur une fiche produit.",
+        "Privilégiez un point de vente dont la durée de retour est clairement annoncée : la bonne pointure se décide à l'essai, pas sur une fiche produit.",
       );
   }
 
