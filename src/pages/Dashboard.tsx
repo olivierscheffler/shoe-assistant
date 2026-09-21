@@ -5,7 +5,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import {
   answerText,
+  availabilityNote,
+  AVAILABILITY_SHORT,
+  brandSite,
   cushionLabel,
+  DIVERSITY_NOTE,
   isAnswered,
   modelName,
   modelSearchUrl,
@@ -15,6 +19,7 @@ import {
   WEAR_NOTE,
   type Answers,
   type MatchResult,
+  type Question,
   type QuestionId,
   type ShoeModel,
 } from "@/lib/shoe-advisor";
@@ -51,7 +56,9 @@ function specChips(model: ShoeModel): string[] {
       ? `étanche (${model.membrane ?? "membrane"})`
       : model.waterproof === "traitement"
         ? "déperlant"
-        : "non étanche";
+        : model.waterproof === "a-verifier"
+          ? "étanchéité à vérifier"
+          : "non étanche";
   return [
     supportLabel(model.support),
     `amorti ${cushionLabel(model.cushioning)}`,
@@ -60,6 +67,7 @@ function specChips(model: ShoeModel): string[] {
     waterproof,
     model.wideFit ? "largeurs larges" : "largeur standard",
     `${model.priceEur[0]}–${model.priceEur[1]} €`,
+    AVAILABILITY_SHORT[model.availability],
   ];
 }
 
@@ -88,15 +96,31 @@ function Wizard({
   const allMissing = REQUIRED.filter((id) => !isAnswered(draft, id));
   const progress = Math.round(((stepIndex + 1) / STEPS.length) * 100);
 
-  const toggle = (id: QuestionId, value: string, multiple?: boolean) => {
-    if (multiple) {
+  /**
+   * Choix multiple = cases à cocher (plusieurs valeurs, et une option exclusive comme
+   * « un peu des trois » vide les autres). Choix unique = bouton radio, et un second
+   * clic sur la même option annule la réponse.
+   */
+  const toggle = (question: Question, value: string) => {
+    const { id } = question;
+
+    if (question.multiple) {
+      const isExclusive = question.options.find((option) => option.value === value)?.exclusive === true;
+      if (isExclusive) {
+        setDraft({ ...draft, [id]: [value] });
+        return;
+      }
       const current = draft[id];
-      const list = Array.isArray(current) ? current : [];
+      const list = (Array.isArray(current) ? current : []).filter(
+        (entry) => question.options.find((option) => option.value === entry)?.exclusive !== true,
+      );
       const next = list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value];
       setDraft({ ...draft, [id]: next });
       return;
     }
-    setDraft({ ...draft, [id]: value });
+
+    const current = draft[id];
+    setDraft({ ...draft, [id]: current === value ? undefined : value });
   };
 
   return (
@@ -160,7 +184,7 @@ function Wizard({
             const values = draft[id];
             const selected = Array.isArray(values) ? values : values ? [values] : [];
             return (
-              <fieldset key={id}>
+              <fieldset key={id} role={question.multiple ? "group" : "radiogroup"}>
                 <legend className="flex flex-wrap items-baseline gap-3">
                   <span className="text-sm font-medium">{question.label}</span>
                   {REQUIRED.includes(id) && (
@@ -168,11 +192,9 @@ function Wizard({
                       requise
                     </span>
                   )}
-                  {question.multiple && (
-                    <span className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
-                      plusieurs choix
-                    </span>
-                  )}
+                  <span className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
+                    {question.multiple ? "plusieurs choix" : "choix unique"}
+                  </span>
                 </legend>
                 {question.help && (
                   <p className="mt-2 max-w-xl text-xs leading-5 text-muted-foreground">{question.help}</p>
@@ -184,8 +206,10 @@ function Wizard({
                       <button
                         key={option.value}
                         type="button"
-                        aria-pressed={isSelected}
-                        onClick={() => toggle(id, option.value, question.multiple)}
+                        role={question.multiple ? "checkbox" : "radio"}
+                        aria-checked={isSelected}
+                        aria-pressed={question.multiple ? isSelected : undefined}
+                        onClick={() => toggle(question, option.value)}
                         className={cn(
                           "flex items-start gap-3 border px-4 py-3.5 text-left transition-colors",
                           isSelected
@@ -194,12 +218,19 @@ function Wizard({
                         )}
                       >
                         <span
+                          aria-hidden="true"
                           className={cn(
                             "mt-0.5 flex size-4 shrink-0 items-center justify-center border",
+                            question.multiple ? "rounded-none" : "rounded-full",
                             isSelected ? "border-background/70 bg-background/10" : "border-border",
                           )}
                         >
-                          {isSelected && <Check className="size-3" />}
+                          {isSelected &&
+                            (question.multiple ? (
+                              <Check className="size-3" />
+                            ) : (
+                              <span className="size-1.5 rounded-full bg-current" />
+                            ))}
                         </span>
                         <span className="flex flex-col gap-0.5">
                           <span className="text-sm leading-5">{option.label}</span>
@@ -273,6 +304,7 @@ function Wizard({
 
 function ResultCard({ result, rank }: { result: MatchResult; rank: number }) {
   const { model } = result;
+  const site = brandSite(model);
   return (
     <article className="border-t border-border pt-10">
       <header className="grid gap-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
@@ -337,19 +369,30 @@ function ResultCard({ result, rank }: { result: MatchResult; rank: number }) {
         </div>
       </div>
 
-      <div className="mt-8 flex flex-wrap items-center gap-6">
-        <a
-          href={modelSearchUrl(model)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs tracking-[0.02em] text-foreground underline-offset-4 hover:underline"
-        >
-          Vérifier la version en cours
-          <ArrowUpRight className="size-3" />
-        </a>
-        <span className="text-xs text-muted-foreground">
-          Prix et disponibilité : à vérifier chez votre distributeur.
-        </span>
+      <div className="mt-8 grid gap-5 border-t border-border pt-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-10">
+        <p className="max-w-xl text-xs leading-6 text-muted-foreground">{availabilityNote(model)}</p>
+        <div className="flex flex-wrap items-center gap-6">
+          <a
+            href={modelSearchUrl(model)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs tracking-[0.02em] text-foreground underline-offset-4 hover:underline"
+          >
+            Vérifier la version en cours
+            <ArrowUpRight className="size-3" />
+          </a>
+          {site && (
+            <a
+              href={site}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs tracking-[0.02em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Fiche de la marque
+              <ArrowUpRight className="size-3" />
+            </a>
+          )}
+        </div>
       </div>
     </article>
   );
@@ -476,6 +519,7 @@ function Results({
               Essayez-les dans cet ordre. Un modèle qui gêne à l&apos;essayage reste un mauvais choix,
               même avec un bon score.
             </p>
+            <p className="mt-3 max-w-2xl text-xs leading-5 text-muted-foreground">{DIVERSITY_NOTE}</p>
           </div>
         )}
         {advice.matches.map((result, index) => (

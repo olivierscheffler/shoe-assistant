@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { CATALOG, STEPS, WEAR_NOTE } from "@/lib/shoe-advisor";
+import { CATALOG_CHECKED_ON, EXTRA_BRANDS, FULL_CATALOG, STEPS, WEAR_NOTE } from "@/lib/shoe-advisor";
 import { motion } from "framer-motion";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Link, useNavigate } from "react-router";
@@ -22,6 +22,7 @@ const CRITERIA = [
   { title: "Poids corporel", detail: "Une tranche suffit : elle change le besoin d'amorti." },
   { title: "Avant-pied", detail: "Orteils comprimés à l'essai ou jamais serré : cela décide de la largeur." },
   { title: "Budget", detail: "Un plafond dur : au-delà de 15 %, le modèle est écarté." },
+  { title: "Disponibilité", detail: "Grande enseigne, magasin spécialisé, ligne ou réassort attendu : les modèles introuvables là où vous achetez sont écartés." },
   { title: "Contraintes", detail: "Vegan, fabrication européenne, réparable, poids, discrétion." },
   { title: "Style", detail: "Discret, sportif, streetwear, outdoor — ou indifférent." },
   { title: "Lieu d'essai", detail: "Magasin ou ligne avec retour : la stratégie de pointure change." },
@@ -31,10 +32,17 @@ const CRITERIA = [
 const FAMILIES = [
   { label: "Amorti maximal, marche longue", brands: "HOKA Bondi & Clifton · ASICS GEL-Nimbus · Brooks Glycerin · Saucony Triumph · New Balance 1080 · Nike Vomero · On Cloudmonster" },
   { label: "Stabilité et pronation", brands: "Brooks Adrenaline GTS · ASICS GEL-Kayano · Saucony Guide · New Balance 860 · HOKA Arahi & Gaviota · Mizuno Wave Inspire · Nike Structure" },
-  { label: "Randonnée", brands: "Salomon X Ultra · Merrell Moab & Moab Speed · Keen Targhee · Lowa Renegade · HOKA Kaha" },
-  { label: "Sentiers techniques", brands: "Salomon Speedcross · HOKA Speedgoat · Brooks Cascadia · ASICS GEL-Trabuco · Altra Lone Peak · La Sportiva Ultra Raptor" },
-  { label: "Pied large, avant-pied libre", brands: "Altra · Topo Athletic · Keen · New Balance et Brooks en largeurs 2E / 4E" },
-  { label: "Lifestyle et matières", brands: "Veja · Allbirds · adidas Samba · New Balance 574 · Salomon XT-6 — vegan uniquement sur certaines déclinaisons : ni les Allbirds en laine ni les Samba en cuir ne sont vegan" },
+  { label: "Randonnée", brands: "Salomon X Ultra · Merrell Moab & Moab Speed · Keen Targhee · Lowa Renegade · HOKA Kaha · Quechua MH500" },
+  { label: "Sentiers techniques", brands: "Salomon Speedcross · HOKA Speedgoat · Brooks Cascadia · ASICS GEL-Trabuco · Altra Lone Peak · La Sportiva Ultra Raptor · NNormal Tomir · inov-8 Roclite" },
+  { label: "Pied large, avant-pied libre", brands: "Altra · Topo Athletic · Keen · Alt-Berg · Hanwag et Meindl en chaussant large · New Balance et Brooks en largeurs 2E / 4E" },
+  {
+    label: "Hors grandes marques",
+    brands: `${EXTRA_BRANDS.join(" · ")} — cordonniers, marques de montagne familiales et petites marques européennes que les comparatifs habituels oublient : elles couvrent le pied très large, le ressemelage, la fabrication européenne ou un budget serré.`,
+  },
+  { label: "Couture et durabilité", brands: "Hanwag · Meindl · Alt-Berg · Paraboot : cuir, montage cousu, semelle remplaçable en atelier — plus chers, mais réparables plutôt que jetables" },
+  { label: "Minimalistes", brands: "Vivobarefoot · Xero Shoes : semelle plate et 0 mm de drop, à adopter progressivement" },
+  { label: "Budget serré, disponible partout", brands: "Quechua MH500 · Skechers GOwalk · Novesta Star Master" },
+  { label: "Lifestyle et matières", brands: "Veja · Allbirds · adidas Samba · New Balance 574 · Salomon XT-6 · Karhu · Scarpa Mojito · Paraboot Michael — vegan uniquement sur certaines déclinaisons : ni les Allbirds en laine ni les Samba en cuir ne sont vegan" },
 ];
 
 const DATA_LEVELS = [
@@ -52,6 +60,24 @@ const DATA_LEVELS = [
     title: "À vérifier",
     body: "Ce que nous refusons de deviner : version en cours, matière exacte, disponibilité des largeurs.",
     example: "« Poids à vérifier sur la fiche produit avant achat. »",
+  },
+];
+
+const AVAILABILITY_LEVELS = [
+  {
+    title: "Grande distribution",
+    body: "Chaînes de sport et de chaussures, plus la vente en ligne. Le plus simple à essayer et à échanger en cas de mauvaise pointure.",
+    example: "HOKA Bondi · Salomon X Ultra · Quechua MH500",
+  },
+  {
+    title: "Magasins spécialisés",
+    body: "Réseau outdoor ou running : quelques kilomètres à prévoir, mais un vrai conseil et plus de largeurs en rayon.",
+    example: "Hanwag Tatra · Lowa Renegade · inov-8 Roclite",
+  },
+  {
+    title: "Réseau très étroit",
+    body: "Vente directe ou quelques revendeurs, souvent en ligne, avec un réassort lent. Écarté d'office si vous voulez acheter en magasin généraliste.",
+    example: "Alt-Berg Mallerstang · NNormal Tomir · Karhu Fusion",
   },
 ];
 
@@ -73,6 +99,14 @@ const FAQ = [
   {
     q: "Pourquoi certains modèles sont-ils écartés ?",
     a: "Trois cas : un critère éliminatoire non respecté (terrain, budget, vegan), un score trop faible pour votre profil, ou des données insuffisantes. Chaque exclusion est affichée avec sa raison : c'est aussi informatif que la recommandation.",
+  },
+  {
+    q: "Pourquoi proposer des marques peu connues ?",
+    a: "Parce que les listes habituelles tournent toujours autour des mêmes dix marques, alors que d'autres lignes répondent mieux à certains besoins : chaussant très large et ressemelage chez Alt-Berg ou Hanwag, fabrication européenne chez Meindl et Paraboot, budget serré et disponibilité partout chez Quechua, minimalisme chez Vivobarefoot ou Xero Shoes. Le classement s'interdit plus de deux modèles d'une même marque, et le prompt de l'assistant exige la même diversité.",
+  },
+  {
+    q: "Comment savez-vous qu'un modèle est toujours en vente ?",
+    a: "Aucun stock n'est consulté. Ce qui est vérifiable est déclaré : le réseau de vente (grande enseigne, magasin spécialisé, réseau très étroit) et la permanence de la ligne (permanente, reconduite chaque année, non garantie). Le catalogue porte sa date de vérification, et chaque modèle renvoie vers la fiche de la marque. Une paire d'occasion ou une version précédente reste souvent une bonne affaire quand les caractéristiques n'ont pas changé.",
   },
   {
     q: "Est-ce un avis médical ?",
@@ -101,6 +135,7 @@ export default function Landing() {
           <nav className="hidden items-center gap-8 text-[13px] text-muted-foreground md:flex">
             <a href="#methode" className="transition-colors hover:text-foreground">Méthode</a>
             <a href="#criteres" className="transition-colors hover:text-foreground">Critères</a>
+            <a href="#disponibilite" className="transition-colors hover:text-foreground">Disponibilité</a>
             <a href="#familles" className="transition-colors hover:text-foreground">Familles</a>
             <Link to="/prompt" className="transition-colors hover:text-foreground">Prompt .md</Link>
           </nav>
@@ -194,8 +229,11 @@ export default function Landing() {
       <section className="border-y border-border">
         <div className="mx-auto grid w-full max-w-6xl grid-cols-2 divide-x divide-border px-6 sm:px-8 lg:grid-cols-4">
           {[
-            { value: String(CATALOG.length), label: "lignes de modèles suivies" },
-            { value: String(CRITERIA.length), label: "critères pris en compte" },
+            { value: String(FULL_CATALOG.length), label: "lignes de modèles suivies" },
+            {
+              value: String(new Set(FULL_CATALOG.map((model) => model.brand)).size),
+              label: "marques, dont la moitié hors top 10",
+            },
             { value: "3", label: "niveaux d'incertitude affichés" },
             { value: "0", label: "lien affilié" },
           ].map((stat, index) => (
@@ -229,7 +267,7 @@ export default function Landing() {
             {
               number: "01",
               title: "On pose les questions",
-              body: "Cinq étapes, treize questions. Les réponses « je ne sais pas » sont acceptées : elles deviennent des points à vérifier, pas des suppositions.",
+              body: "Cinq étapes, quatorze questions. Usages et terrains acceptent plusieurs réponses : cochez tout ce que vous faites réellement, pas seulement l'usage dominant.",
             },
             {
               number: "02",
@@ -271,7 +309,7 @@ export default function Landing() {
                 Ce que l&apos;analyse regarde.
               </h2>
               <p className="mt-6 text-[15px] leading-7 text-muted-foreground">
-                Aucun critère caché, aucune pondération secrète : les treize questions ci-contre
+                Aucun critère caché, aucune pondération secrète : les quatorze questions ci-contre
                 déterminent tout le classement.
               </p>
             </div>
@@ -318,17 +356,73 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Disponibilité */}
+      <section id="disponibilite" className="border-t border-border">
+        <div className="mx-auto w-full max-w-6xl px-6 py-24 sm:px-8 sm:py-32">
+          <motion.div {...fadeUp} className="grid gap-10 lg:grid-cols-12">
+            <div className="lg:col-span-4">
+              <p className="micro">Disponibilité</p>
+              <h2 className="mt-6 font-serif text-4xl leading-[1.08] tracking-[-0.01em] sm:text-5xl">
+                Trouvable, vérifiable, ou écarté.
+              </h2>
+            </div>
+
+            <div className="lg:col-span-8">
+              <p className="max-w-2xl text-[15px] leading-7 text-muted-foreground">
+                Un modèle parfait mais introuvable ne sert à rien. Chaque ligne déclare donc son réseau
+                de vente réel et la permanence de sa ligne, et le classement écarte ce que vous ne
+                pourrez pas acheter là où vous comptez acheter.
+              </p>
+
+              <dl className="mt-10">
+                {AVAILABILITY_LEVELS.map((level) => (
+                  <div
+                    key={level.title}
+                    className="grid gap-2 border-t border-border py-5 sm:grid-cols-[minmax(0,12rem)_1fr] sm:gap-10"
+                  >
+                    <dt className="text-sm font-medium">{level.title}</dt>
+                    <dd className="text-sm leading-6 text-muted-foreground">
+                      {level.body}
+                      <span className="mt-2 block text-xs tracking-[0.02em] text-muted-foreground italic">
+                        {level.example}
+                      </span>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+
+              <div className="mt-12 border border-border bg-card p-8">
+                <p className="micro">Ce que l&apos;outil ne peut pas savoir</p>
+                <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Les stocks, les pointures en rayon et les prix du jour ne sont pas consultés : aucune
+                  API publique ne les donne de façon fiable. Le catalogue est vérifié une fois ({CATALOG_CHECKED_ON}),
+                  puis chaque modèle renvoie vers la fiche de la marque et vers une recherche ouverte
+                  pour confirmer avant de vous déplacer.
+                </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <Button onClick={start} className="gap-2 rounded-none px-5">
+                    Vérifier pour mon profil
+                    <ArrowRight className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Familles */}
       <section id="familles" className="border-t border-border">
         <div className="mx-auto w-full max-w-6xl px-6 py-24 sm:px-8 sm:py-32">
           <motion.div {...fadeUp} className="max-w-2xl">
             <p className="micro">Familles couvertes</p>
             <h2 className="mt-6 font-serif text-4xl leading-[1.08] tracking-[-0.01em] sm:text-5xl">
-              {CATALOG.length} lignes suivies, six familles d&apos;usage.
+              {FULL_CATALOG.length} lignes suivies, {FAMILIES.length} familles.
             </h2>
             <p className="mt-6 text-[15px] leading-7 text-muted-foreground">
               Les lignes de modèles plutôt que des références figées : elles existent sur plusieurs
-              générations et se renouvellent chaque année.
+              générations et se renouvellent chaque année. La moitié des marques du catalogue ne sont
+              pas des marques de sport généralistes.
             </p>
           </motion.div>
 

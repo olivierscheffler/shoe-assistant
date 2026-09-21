@@ -8,8 +8,9 @@ const SECTIONS = [
   { title: "Cinq règles d'or", detail: "Résumé décisionnel en tête de fichier : questions d'abord, rien d'inventé, incertitude classée, contraintes dures, santé." },
   { title: "Rôle, objectif et périmètre", detail: "Conseiller spécialisé marche, randonnée légère et sneakers — et ce qui sort du périmètre (sécurité, alpinisme, orthopédie, enfants)." },
   { title: "Règles absolues", detail: "Aucune marque inventée, aucun chiffre deviné, aucune source ni URL fabriquée, aucune donnée temps réel supposée." },
-  { title: "Questions à poser", detail: "Cinq blocs, treize questions avant toute proposition, plus un mode express à six questions." },
-  { title: "Méthode d'analyse", detail: "Usage et terrain éliminatoires, puis support, amorti, chaussant, contraintes, style ; indice de correspondance assumé." },
+  { title: "Questions à poser", detail: "Cinq blocs, quatorze questions avant toute proposition — dont les questions à réponses multiples — plus un mode express à six questions." },
+  { title: "Méthode d'analyse", detail: "Usages et terrains éliminatoires, puis support, amorti, chaussant, contraintes, style, disponibilité ; indice de correspondance assumé, diversité des marques imposée." },
+  { title: "Disponibilité et diversité", detail: "Aucun stock promis : canal de vente, permanence de la ligne, procédure de vérification, et obligation de proposer des marques hors du top habituel." },
   { title: "Machine à états", detail: "Cadrage, questions, propositions, arbitrage, synthèse : l'étape en cours est toujours explicite." },
   { title: "Format de réponse", detail: "Ce que j'ai compris, 3 à 5 modèles, modèles écartés, essai, à vérifier — sous un budget de longueur." },
   { title: "Garde-fous", detail: "Anti-hallucination, reprise si réponses partielles, checklist d'auto-vérification, rappel professionnel de santé." },
@@ -73,10 +74,11 @@ export default function Prompt() {
               Le prompt qui pilote l&apos;assistant.
             </h1>
             <p className="mt-6 max-w-xl text-sm leading-7 text-muted-foreground">
-              Version 1.1, en français. Il définit le rôle du conseiller, interdit toute invention de
-              modèle, de chiffre ou de source, impose les questions préalables, cadre le périmètre,
-              fixe l'étape de conversation et le format de réponse. Copiable tel quel dans
-              n&apos;importe quel assistant conversationnel.
+              Version 1.2, en français. Il définit le rôle du conseiller, interdit toute invention de
+              modèle, de chiffre ou de source, impose les questions préalables (avec les questions à
+              réponses multiples), exige de sortir des marques les plus connues, cadre la vérification
+              de la disponibilité, fixe l'étape de conversation et le format de réponse. Copiable tel
+              quel dans n&apos;importe quel assistant conversationnel.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -101,7 +103,8 @@ export default function Prompt() {
 
             <p className="mt-10 text-xs leading-6 text-muted-foreground">
               L&apos;espace d&apos;analyse de ce site applique exactement les mêmes règles, avec un
-              classement déterministe sur treize critères pondérés et les exclusions affichées.
+              classement déterministe sur des critères pondérés, les exclusions affichées et la
+              disponibilité déclarée ligne par ligne.
             </p>
           </div>
 

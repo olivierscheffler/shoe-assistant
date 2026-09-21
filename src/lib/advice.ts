@@ -1,25 +1,28 @@
 /**
  * Assemblage de la réponse finale du conseiller.
  *
- * Le noyau du moteur — catalogue, filtres durs, scoring — vit dans
- * `shoe-advisor.ts`. Ce module applique par-dessus les deux derniers critères du
- * questionnaire (avant-pied comprimé à l'essai, attente prioritaire déclarée),
+ * Le noyau du moteur — catalogue, filtres durs, scoring, disponibilité — vit dans
+ * `shoe-advisor.ts` et `shoe-catalog.ts`. Ce module applique par-dessus les deux derniers
+ * critères du questionnaire (avant-pied comprimé à l'essai, attente prioritaire déclarée),
  * remet les verdicts à jour, puis compose les sections « comment essayer » et
  * « à faire valider par un professionnel ».
  */
 
 import {
   answerValues,
+  hasPain,
   isAnswered,
   optionLabel,
   recommend as scoreCatalog,
-  resultToMarkdown,
-  WEAR_NOTE,
   type Advice,
   type Answers,
   type MatchResult,
   type ShoeModel,
 } from "./shoe-advisor";
+
+// L'export Markdown vit avec le moteur : il connaît la disponibilité et la méthode.
+// On le réexpose ici pour que les pages n'aient qu'un seul import à retenir.
+export { adviceToMarkdown } from "./shoe-advisor";
 
 export interface FullAdvice extends Advice {
   tryOn: string[];
@@ -97,7 +100,7 @@ function priorityMetric(model: ShoeModel, priorite: string | undefined): number 
       return model.cushioning * 2;
     case "durabilite":
       return (
-        (model.repairable ? 4 : 0) +
+        (model.repairable === true ? 4 : 0) +
         (model.category === "rando" ? 2 : 0) +
         (model.orthotic === "compatible" ? 1 : 0)
       );
@@ -239,7 +242,7 @@ function professionalPoints(answers: Answers): string[] {
     points.push(
       "Ampoules à répétition : si elles reviennent toujours au même endroit, faites vérifier votre appui avant de multiplier les paires.",
     );
-  if (answerValues(answers, "appui")[0] === "douleurs")
+  if (hasPain(answers))
     points.push(
       "Douleurs au talon, à la voûte ou au tibia : consultez avant d'attribuer la douleur à vos chaussures, un changement de modèle ne suffit pas toujours.",
     );
@@ -251,62 +254,4 @@ function professionalPoints(answers: Answers): string[] {
   return points;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Export Markdown                                                            */
-/* -------------------------------------------------------------------------- */
 
-/** Récapitulatif Markdown complet, copiable depuis l'interface. */
-export function adviceToMarkdown(answers: Answers, advice: FullAdvice): string {
-  const blocks: string[] = [
-    "# Récapitulatif — choix de chaussures",
-    "",
-    `_Généré par l'assistant. ${WEAR_NOTE}_`,
-    "",
-    "## Ce que j'ai compris",
-    "",
-    ...advice.summary.map((item) => `- **${item.label}** : ${item.value}`),
-    "",
-    "## Modèles proposés",
-    "",
-    ...advice.matches.map(resultToMarkdown),
-  ];
-
-  if (advice.alternates.length > 0) {
-    blocks.push("", "## Également compatibles", "");
-    for (const alt of advice.alternates) {
-      blocks.push(
-        `- **${alt.model.brand} ${alt.model.version ?? alt.model.line}** (score ${alt.score}/100) : ${alt.strengths.slice(0, 2).join(" ; ")}`,
-      );
-    }
-  }
-
-  if (advice.excluded.length > 0) {
-    blocks.push("", "## Modèles écartés et pourquoi", "");
-    for (const item of advice.excluded) {
-      const reason =
-        item.blockers.length > 0
-          ? item.blockers.join(" ; ")
-          : `score trop faible (${item.score}/100) pour votre profil`;
-      blocks.push(`- **${item.model.brand} ${item.model.version ?? item.model.line}** : ${reason}`);
-    }
-  }
-
-  blocks.push("", "## Comment essayer", "", ...advice.tryOn.map((item) => `- ${item}`));
-  blocks.push(
-    "",
-    "## Points à faire valider par un professionnel",
-    "",
-    ...advice.professional.map((item) => `- ${item}`),
-  );
-  blocks.push("", "## Données à vérifier (non garanties)", "", ...advice.pending.map((item) => `- ${item}`));
-  blocks.push(
-    "",
-    "## Méthode et limites",
-    "",
-    "- Classement déterministe sur des critères explicites : usage, terrain, appui, amorti, chaussant, contraintes, style.",
-    `- ${WEAR_NOTE}`,
-    "- Cet assistant ne remplace ni un avis médical ni un essai en magasin.",
-  );
-
-  return blocks.join("\n");
-}

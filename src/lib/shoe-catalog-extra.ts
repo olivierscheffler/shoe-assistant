@@ -1,0 +1,580 @@
+/**
+ * Complément de catalogue + métadonnées de disponibilité.
+ *
+ * Deux rôles :
+ * 1. **Lignes hors grandes marques** : cordonniers et marques spécialisées que l'on ne
+ *    trouve pas dans toutes les listes de recommandation (Hanwag, Meindl, Alt-Berg,
+ *    Paraboot, NNormal, inov-8, Novesta…). Elles ne sont pas là pour remplir le
+ *    catalogue : chacune couvre un besoin que les grandes marques couvrent mal
+ *    (pied très large, ressemelage, fabriqué en Europe, minimalisme, petit budget).
+ * 2. **Disponibilité** : ce qui est vérifiable sans accès aux stocks — la largeur du
+ *    réseau de vente et la permanence de la ligne. `availabilityNote()` dit toujours ce
+ *    que l'outil ne sait pas (les stocks, les pointures disponibles, les prix du jour).
+ *
+ * Aucune donnée chiffrée n'est devinée : tout ce qui n'est pas documenté vaut `null` ou
+ * « a-verifier » et s'affiche comme tel.
+ */
+
+import { answerValues, type Answers, type Availability, type LineStatus, type ShoeModel } from "./shoe-catalog";
+
+/** Date de dernière vérification des lignes du catalogue (jamais des stocks). */
+export const CATALOG_CHECKED_ON = "21 septembre 2026";
+
+export const AVAILABILITY_LABEL: Record<Availability, string> = {
+  large: "Grande distribution sport et chaussures, plus vente en ligne",
+  specialisee: "Magasins spécialisés (outdoor ou running) et vente en ligne",
+  restreinte: "Réseau très étroit : vente directe ou quelques revendeurs",
+};
+
+/** Version courte des canaux, pour les puces d'interface. */
+export const AVAILABILITY_SHORT: Record<Availability, string> = {
+  large: "grande distribution",
+  specialisee: "magasins spécialisés",
+  restreinte: "réseau très étroit",
+};
+
+export const LINE_STATUS_LABEL: Record<LineStatus, string> = {
+  permanente: "Ligne permanente au catalogue",
+  renouvelee: "Ligne reconduite, avec une nouvelle version chaque année ou presque",
+  edition: "Ligne non permanente, susceptible de disparaître du catalogue",
+};
+
+/**
+ * Marques que l'on retrouve dans toutes les listes de recommandation. Le classement
+ * s'interdit d'en empiler plus de deux dans la sélection principale et signale quand la
+ * sélection s'y enferme.
+ */
+export const MAINSTREAM_BRANDS = new Set([
+  "HOKA",
+  "Brooks",
+  "ASICS",
+  "Saucony",
+  "New Balance",
+  "Mizuno",
+  "Nike",
+  "On",
+  "adidas",
+  "Salomon",
+  "Merrell",
+  "Keen",
+  "Lowa",
+  "La Sportiva",
+  "Veja",
+  "Allbirds",
+  "Skechers",
+  "Ecco",
+  "Quechua",
+  "Mephisto",
+]);
+
+/** Phrase de disponibilité : ce que l'outil sait, et surtout ce qu'il ne sait pas. */
+export function availabilityNote(model: ShoeModel): string {
+  const channel = AVAILABILITY_LABEL[model.availability];
+  const line = LINE_STATUS_LABEL[model.lineStatus].toLowerCase();
+  return `${channel} · ${line}. Stocks non consultés : à confirmer chez le distributeur (catalogue vérifié le ${CATALOG_CHECKED_ON}).`;
+}
+
+/** Douleur déclarée : dans la version 1.1 c'était une option d'appui, on accepte encore cette forme. */
+export function hasPain(answers: Answers): boolean {
+  return (
+    answerValues(answers, "pied").includes("douleurs") ||
+    answerValues(answers, "appui")[0] === "douleurs"
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Lignes hors grandes marques                                                */
+/* -------------------------------------------------------------------------- */
+
+const EXTRA: ShoeModel[] = [
+  /* ------------------------------------------------------------- randonnée */
+  {
+    id: "hanwag-tatra",
+    availability: "specialisee",
+    lineStatus: "permanente",
+    brand: "Hanwag",
+    line: "Tatra",
+    version: "Tatra II",
+    category: "rando",
+    usages: ["rando", "rando-soutenue"],
+    terrains: ["chemins", "sentiers"],
+    support: "neutre",
+    cushioning: 2,
+    dropMm: null,
+    weightG: null,
+    wideFit: true,
+    waterproof: "membrane",
+    membrane: "Gore-Tex",
+    orthotic: "a-tester",
+    vegan: "non",
+    madeInEurope: "partiel",
+    repairable: true,
+    priceEur: [250, 290],
+    style: ["outdoor"],
+    highlights: [
+      "Cuir nubuck épais et semelle à crampons profonds : taillée pour la randonnée avec sac",
+      "Montage ressemelable, et un chaussant large proposé sur plusieurs versions",
+    ],
+    caveats: [
+      "Lourde et raide au début : comptez plusieurs sorties pour l'assouplir",
+      "Poids et drop non documentés ici : à vérifier sur la fiche produit",
+    ],
+  },
+  {
+    id: "meindl-borneo",
+    availability: "specialisee",
+    lineStatus: "renouvelee",
+    brand: "Meindl",
+    line: "Borneo",
+    version: "Borneo 2",
+    category: "rando",
+    usages: ["rando-soutenue", "rando"],
+    terrains: ["chemins", "sentiers"],
+    support: "neutre",
+    cushioning: 2,
+    dropMm: null,
+    weightG: null,
+    wideFit: true,
+    waterproof: "membrane",
+    membrane: "Gore-Tex",
+    orthotic: "a-tester",
+    vegan: "non",
+    madeInEurope: "oui",
+    repairable: true,
+    priceEur: [260, 300],
+    style: ["outdoor"],
+    highlights: [
+      "Cuir cousu et fabriquée en Allemagne : la paire qui se ressemelle au lieu de se remplacer",
+      "Proposée en chaussant large (Comfort Fit) pour les pieds forts",
+    ],
+    caveats: [
+      "Poids élevé et temps de rodage : à réserver aux longues sorties",
+      "Le cuir demande un entretien régulier pour garder son étanchéité",
+    ],
+  },
+  {
+    id: "altberg-mallerstang",
+    availability: "restreinte",
+    lineStatus: "permanente",
+    brand: "Alt-Berg",
+    line: "Mallerstang",
+    version: null,
+    category: "rando",
+    usages: ["rando", "marche"],
+    terrains: ["chemins", "asphalte", "sentiers"],
+    support: "neutre",
+    cushioning: 2,
+    dropMm: null,
+    weightG: null,
+    wideFit: true,
+    waterproof: "a-verifier",
+    membrane: null,
+    orthotic: "a-tester",
+    vegan: "non",
+    madeInEurope: "oui",
+    repairable: true,
+    priceEur: [200, 260],
+    style: ["outdoor", "discret"],
+    highlights: [
+      "Fabriquée en Angleterre, ressemelable, et réputée pour ses chaussants très larges",
+      "Plusieurs largeurs annoncées : la marque est construite autour de ce besoin",
+    ],
+    caveats: [
+      "Réseau de vente très étroit : commande directe ou quelques revendeurs britanniques",
+      "Protection contre l'eau non documentée ici : cuir à entretenir, à vérifier sur la fiche produit",
+    ],
+  },
+  {
+    id: "dolomite-54-low",
+    availability: "specialisee",
+    lineStatus: "permanente",
+    brand: "Dolomite",
+    line: "Cinquantaquattro",
+    version: "Cinquantaquattro Low",
+    category: "rando",
+    usages: ["rando", "urbain", "lifestyle"],
+    terrains: ["chemins", "asphalte"],
+    support: "neutre",
+    cushioning: 2,
+    dropMm: null,
+    weightG: null,
+    wideFit: false,
+    waterproof: "a-verifier",
+    membrane: null,
+    orthotic: "a-tester",
+    vegan: "a-verifier",
+    madeInEurope: "a-verifier",
+    repairable: "a-verifier",
+    priceEur: [140, 180],
+    style: ["outdoor", "discret"],
+    highlights: [
+      "Marque italienne historique : cuir, semelle adhérente, look montagne sobre",
+      "Une ligne ancienne, déclinée en versions basses, mid et estivales",
+    ],
+    caveats: [
+      "Origine de fabrication, matières et réparabilité non documentées ici : à vérifier sur la fiche produit",
+      "Amorti ferme : prévoyez une semelle intérieure si vous marchez longtemps",
+    ],
+  },
+  {
+    id: "quechua-mh500",
+    availability: "large",
+    lineStatus: "renouvelee",
+    brand: "Quechua",
+    line: "MH500",
+    version: null,
+    category: "rando",
+    usages: ["rando", "marche"],
+    terrains: ["chemins", "asphalte"],
+    support: "neutre",
+    cushioning: 3,
+    dropMm: null,
+    weightG: null,
+    wideFit: false,
+    waterproof: "aucune",
+    membrane: null,
+    orthotic: "a-tester",
+    vegan: "a-verifier",
+    madeInEurope: "non",
+    repairable: false,
+    priceEur: [60, 90],
+    style: ["outdoor", "sport"],
+    highlights: [
+      "Le meilleur rapport prix / usage en randonnée légère, et trouvable partout en France",
+      "Une version membranée existe dans la même gamme si vous marchez souvent mouillé",
+    ],
+    caveats: [
+      "Maintien et durabilité en dessous des marques de montagne en usage intensif",
+      "Amorti moyen : peu adapté au-delà de 30 km par semaine",
+    ],
+  },
+  /* --------------------------------------------------- marche urbaine / confort */
+  {
+    id: "skechers-gowalk",
+    availability: "large",
+    lineStatus: "renouvelee",
+    brand: "Skechers",
+    line: "GOwalk",
+    version: null,
+    category: "marche",
+    usages: ["urbain", "marche"],
+    terrains: ["asphalte"],
+    support: "neutre",
+    cushioning: 4,
+    dropMm: null,
+    weightG: null,
+    wideFit: true,
+    waterproof: "aucune",
+    membrane: null,
+    orthotic: "a-tester",
+    vegan: "options",
+    madeInEurope: "non",
+    repairable: false,
+    priceEur: [70, 100],
+    style: ["sport", "street"],
+    highlights: [
+      "Confort immédiat, très léger, et vendu dans à peu près toutes les galeries marchandes",
+      "Des largeurs larges existent sur plusieurs déclinaisons",
+    ],
+    caveats: [
+      "Semelle peu durable si vous marchez plusieurs kilomètres par jour",
+      "Maintien faible : ce n'est pas une chaussure pour le terrain irrégulier",
+    ],
+  },
+  {
+    id: "ecco-biom",
+    availability: "large",
+    lineStatus: "renouvelee",
+    brand: "Ecco",
+    line: "Biom",
+    version: null,
+    category: "marche",
+    usages: ["urbain", "marche", "lifestyle"],
+    terrains: ["asphalte", "chemins"],
+    support: "neutre",
+    cushioning: 3,
+    dropMm: null,
+    weightG: null,
+    wideFit: false,
+    waterproof: "aucune",
+    membrane: null,
+    orthotic: "a-tester",
+    vegan: "options",
+    madeInEurope: "partiel",
+    repairable: false,
+    priceEur: [150, 200],
+    style: ["discret", "sport"],
+    highlights: [
+      "Cuir de tannerie maison et chaussant anatomique, sobre et durable",
+      "Présente en magasin de chaussures classique, donc essayable facilement",
+    ],
+    caveats: [
+      "Chaque déclinaison change beaucoup : faites préciser le modèle exact en magasin",
+      "Une partie seulement de la production est européenne",
+    ],
+  },
+  /* ---------------------------------------------------------------- minimalistes */
+  {
+    id: "vivobarefoot-primus-lite",
+    availability: "specialisee",
+    lineStatus: "renouvelee",
+    brand: "Vivobarefoot",
+    line: "Primus Lite",
+    version: null,
+    category: "marche",
+    usages: ["urbain", "lifestyle", "marche"],
+    terrains: ["asphalte", "chemins"],
+    support: "neutre",
+    cushioning: 1,
+    dropMm: 0,
+    weightG: null,
+    wideFit: true,
+    waterproof: "aucune",
+    membrane: null,
+    orthotic: "deconseille",
+    vegan: "options",
+    madeInEurope: "a-verifier",
+    repairable: true,
+    priceEur: [140, 170],
+    style: ["sport", "discret"],
+    highlights: [
+      "Semelle plate (0 mm de drop) et avant-pied large : le pied travaille au lieu d'être porté",
+      "La marque propose un service de réparation et de ressemelage",
+    ],
+    caveats: [
+      "Transition à faire progressivement : commencez par 20 à 30 minutes par jour pour éviter les douleurs aux mollets",
+      "Aucun amorti : à éviter en cas de douleurs plantaires ou de très longues distances sur bitume",
+    ],
+  },
+  {
+    id: "xero-prio",
+    availability: "restreinte",
+    lineStatus: "renouvelee",
+    brand: "Xero Shoes",
+    line: "Prio",
+    version: null,
+    category: "marche",
+    usages: ["urbain", "lifestyle"],
+    terrains: ["asphalte", "chemins"],
+    support: "neutre",
+    cushioning: 1,
+    dropMm: 0,
+    weightG: null,
+    wideFit: true,
+    waterproof: "aucune",
+    membrane: null,
+    orthotic: "deconseille",
+    vegan: "oui",
+    madeInEurope: "non",
+    repairable: false,
+    priceEur: [110, 140],
+    style: ["sport"],
+    highlights: [
+      "Semelle plate, sans matière animale, avec une garantie de semelle longue durée annoncée par la marque",
+      "Très légère et souple : pratique en voyage ou comme seconde paire",
+    ],
+    caveats: [
+      "Vente quasi exclusivement en ligne, avec un réassort lent en Europe",
+      "Comme toute minimaliste, la transition doit être progressive",
+    ],
+  },
+  /* ------------------------------------------------------------------ sentiers */
+  {
+    id: "nnormal-tomir",
+    availability: "restreinte",
+    lineStatus: "renouvelee",
+    brand: "NNormal",
+    line: "Tomir",
+    version: null,
+    category: "trail",
+    usages: ["trail", "rando"],
+    terrains: ["sentiers", "chemins"],
+    support: "neutre",
+    cushioning: 3,
+    dropMm: null,
+    weightG: null,
+    wideFit: false,
+    waterproof: "aucune",
+    membrane: null,
+    orthotic: "a-tester",
+    vegan: "a-verifier",
+    madeInEurope: "a-verifier",
+    repairable: "a-verifier",
+    priceEur: [150, 180],
+    style: ["outdoor", "sport"],
+    highlights: [
+      "Marque récente et volontairement peu distribuée, pensée pour durer plutôt que pour la mode",
+      "Semelle adhérente et tige renforcée : chemins et sentiers, y compris humides",
+    ],
+    caveats: [
+      "Peu de revendeurs : achat surtout direct, donc essayage à sécuriser avec un retour possible",
+      "Réparabilité et origine de fabrication non documentées ici : à demander au fabricant",
+    ],
+  },
+  {
+    id: "inov8-roclite",
+    availability: "specialisee",
+    lineStatus: "renouvelee",
+    brand: "inov-8",
+    line: "Roclite",
+    version: null,
+    category: "trail",
+    usages: ["rando", "trail"],
+    terrains: ["sentiers", "chemins"],
+    support: "neutre",
+    cushioning: 3,
+    dropMm: null,
+    weightG: null,
+    wideFit: true,
+    waterproof: "aucune",
+    membrane: null,
+    orthotic: "a-tester",
+    vegan: "options",
+    madeInEurope: "non",
+    repairable: false,
+    priceEur: [150, 190],
+    style: ["outdoor", "sport"],
+    highlights: [
+      "Crampons agressifs et modèles proposés en chaussant large : bon compromis sentier / pied fort",
+      "Marque britannique historique du trail, moins médiatisée que les leaders du secteur",
+    ],
+    caveats: [
+      "Chaque version annuelle change de semelle : vérifiez la référence exacte avant de commander",
+      "Certaines déclinaisons sont membranées, d'autres non",
+    ],
+  },
+  /* ----------------------------------------------------------------- lifestyle */
+  {
+    id: "scarpa-mojito",
+    availability: "large",
+    lineStatus: "permanente",
+    brand: "Scarpa",
+    line: "Mojito",
+    version: null,
+    category: "lifestyle",
+    usages: ["urbain", "lifestyle", "rando"],
+    terrains: ["asphalte", "chemins"],
+    support: "neutre",
+    cushioning: 2,
+    dropMm: null,
+    weightG: null,
+    wideFit: false,
+    waterproof: "aucune",
+    membrane: null,
+    orthotic: "a-tester",
+    vegan: "options",
+    madeInEurope: "partiel",
+    repairable: false,
+    priceEur: [150, 180],
+    style: ["outdoor", "discret"],
+    highlights: [
+      "Look outdoor sobre qui passe en ville comme sur un chemin, tige résistante",
+      "Une ligne ancienne, très déclinée (cuir, daim, versions membranées)",
+    ],
+    caveats: [
+      "Amorti ferme : pas conçue pour de longues distances sur bitume",
+      "Cuir ou daim selon la version : le caractère vegan se vérifie modèle par modèle",
+    ],
+  },
+  {
+    id: "paraboot-michael",
+    availability: "specialisee",
+    lineStatus: "permanente",
+    brand: "Paraboot",
+    line: "Michael",
+    version: null,
+    category: "lifestyle",
+    usages: ["urbain", "lifestyle"],
+    terrains: ["asphalte"],
+    support: "neutre",
+    cushioning: 2,
+    dropMm: null,
+    weightG: null,
+    wideFit: true,
+    waterproof: "aucune",
+    membrane: null,
+    orthotic: "a-tester",
+    vegan: "non",
+    madeInEurope: "oui",
+    repairable: true,
+    priceEur: [350, 420],
+    style: ["discret"],
+    highlights: [
+      "Cuir et montage cousu en France, ressemelage en atelier : la paire qui dure des années",
+      "Plusieurs largeurs existent selon la déclinaison",
+    ],
+    caveats: [
+      "Prix élevé et rodage du cuir : comptez plusieurs semaines avant le confort complet",
+      "Semelle peu amortissante : aucune vocation à la marche longue distance",
+    ],
+  },
+  {
+    id: "novesta-star-master",
+    availability: "specialisee",
+    lineStatus: "permanente",
+    brand: "Novesta",
+    line: "Star Master",
+    version: null,
+    category: "lifestyle",
+    usages: ["urbain", "lifestyle"],
+    terrains: ["asphalte"],
+    support: "neutre",
+    cushioning: 1,
+    dropMm: null,
+    weightG: null,
+    wideFit: false,
+    waterproof: "aucune",
+    membrane: null,
+    orthotic: "deconseille",
+    vegan: "oui",
+    madeInEurope: "oui",
+    repairable: false,
+    priceEur: [70, 95],
+    style: ["discret", "street"],
+    highlights: [
+      "Toile et caoutchouc, sans matière animale, fabriquée en Slovaquie",
+      "Prix contenu pour une fabrication européenne : rare dans cette gamme",
+    ],
+    caveats: [
+      "Semelle très fine : trajets courts et station debout, pas de longues marches",
+      "Ni amorti ni maintien : ce n'est pas une chaussure de marche",
+    ],
+  },
+  {
+    id: "karhu-fusion",
+    availability: "restreinte",
+    lineStatus: "renouvelee",
+    brand: "Karhu",
+    line: "Fusion",
+    version: null,
+    category: "lifestyle",
+    usages: ["urbain", "lifestyle"],
+    terrains: ["asphalte"],
+    support: "neutre",
+    cushioning: 3,
+    dropMm: null,
+    weightG: null,
+    wideFit: false,
+    waterproof: "aucune",
+    membrane: null,
+    orthotic: "deconseille",
+    vegan: "options",
+    madeInEurope: "a-verifier",
+    repairable: false,
+    priceEur: [130, 160],
+    style: ["street", "discret"],
+    highlights: [
+      "Sneaker finlandaise au vrai amorti, bien plus rare en France que les modèles habituels",
+      "Semelle intermédiaire héritée de l'histoire running de la marque",
+    ],
+    caveats: [
+      "Peu de revendeurs : commande en ligne fréquente, pointure à sécuriser",
+      "Au-delà de 15 km par jour, passez à une chaussure de marche active",
+    ],
+  },
+];
+
+export const EXTRA_MODELS: ShoeModel[] = EXTRA;
+
+/** Marques nouvelles dans le catalogue, mises en avant sur la page d'accueil. */
+export const EXTRA_BRANDS: string[] = [...new Set(EXTRA.map((model) => model.brand))];
